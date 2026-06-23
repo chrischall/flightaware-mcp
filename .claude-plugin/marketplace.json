@@ -1,0 +1,37 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "flightaware-mcp",
+  "owner": {
+    "name": "Chris Hall",
+    "email": "chris.c.hall@gmail.com"
+  },
+  "metadata": {
+    "description": "MCP server for FlightAware AeroAPI — live flight tracking, airports, operators, schedules, and alerts",
+    "version": "0.1.0"
+  },
+  "plugins": [
+    {
+      "name": "flightaware-mcp",
+      "displayName": "FlightAware",
+      "source": "./",
+      "description": "Live flight tracking and aviation data via FlightAware AeroAPI — flights, airports, operators, schedules, and alerts",
+      "version": "0.1.0",
+      "author": {
+        "name": "Chris Hall"
+      },
+      "homepage": "https://github.com/chrischall/flightaware-mcp",
+      "repository": "https://github.com/chrischall/flightaware-mcp",
+      "license": "MIT",
+      "keywords": [
+        "flightaware",
+        "aeroapi",
+        "flight-tracking",
+        "aviation",
+        "flight-status",
+        "airports",
+        "mcp"
+      ],
+      "category": "data"
+    }
+  ]
+}

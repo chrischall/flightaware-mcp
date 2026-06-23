@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "flightaware": {
+      "command": "node",
+      "args": ["${CLAUDE_PLUGIN_ROOT}/dist/index.js"],
+      "env": {
+        "AEROAPI_API_KEY": "${AEROAPI_API_KEY}",
+        "AEROAPI_OUTPUT_DIR": "${AEROAPI_OUTPUT_DIR}"
+      }
+    }
+  }
+}

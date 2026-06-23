@@ -1,0 +1,24 @@
+{
+  "name": "flightaware-mcp",
+  "displayName": "FlightAware",
+  "version": "0.1.0",
+  "description": "MCP server for FlightAware AeroAPI — live flight tracking, airports, operators, schedules, and alerts",
+  "author": {
+    "name": "Chris Hall",
+    "email": "chris.c.hall@gmail.com"
+  },
+  "homepage": "https://github.com/chrischall/flightaware-mcp",
+  "repository": "https://github.com/chrischall/flightaware-mcp",
+  "license": "MIT",
+  "keywords": [
+    "flightaware",
+    "aeroapi",
+    "flight-tracking",
+    "aviation",
+    "flight-status",
+    "airports",
+    "mcp"
+  ],
+  "skills": "./SKILL.md",
+  "mcp": "./.mcp.json"
+}

@@ -1,0 +1,36 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.chrischall/flightaware-mcp",
+  "description": "Live flight tracking and aviation data via FlightAware AeroAPI (flights, airports, alerts).",
+  "repository": {
+    "url": "https://github.com/chrischall/flightaware-mcp",
+    "source": "github"
+  },
+  "version": "0.1.0",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "@chrischall/flightaware-mcp",
+      "version": "0.1.0",
+      "transport": {
+        "type": "stdio"
+      },
+      "environmentVariables": [
+        {
+          "name": "AEROAPI_API_KEY",
+          "description": "Your FlightAware AeroAPI key (flightaware.com/aeroapi/portal)",
+          "isRequired": true,
+          "format": "string",
+          "isSecret": true
+        },
+        {
+          "name": "AEROAPI_OUTPUT_DIR",
+          "description": "Default directory for flight-map PNGs (default: current working directory)",
+          "isRequired": false,
+          "format": "string",
+          "isSecret": false
+        }
+      ]
+    }
+  ]
+}
