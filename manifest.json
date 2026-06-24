@@ -36,7 +36,8 @@
       ],
       "env": {
         "AEROAPI_API_KEY": "${user_config.aeroapi_api_key}",
-        "AEROAPI_OUTPUT_DIR": "${user_config.aeroapi_output_dir}"
+        "AEROAPI_OUTPUT_DIR": "${user_config.aeroapi_output_dir}",
+        "AEROAPI_CACHE_TTL": "${user_config.aeroapi_cache_ttl}"
       }
     }
   },
@@ -52,6 +53,13 @@
       "type": "string",
       "title": "Map Output Directory",
       "description": "Default directory for flight-map PNGs (default: current working directory)",
+      "required": false,
+      "sensitive": false
+    },
+    "aeroapi_cache_ttl": {
+      "type": "string",
+      "title": "Read Cache TTL (seconds)",
+      "description": "Cache identical GET responses for this many seconds to cut per-query billing (default: 15; set 0 to disable)",
       "required": false,
       "sensitive": false
     }
@@ -87,7 +95,19 @@
     },
     {
       "name": "fa_get_flight_history",
-      "description": "Get historical flights for an ident"
+      "description": "Get historical flights for an ident (Standard/Premium tier)"
+    },
+    {
+      "name": "fa_search_flight_positions",
+      "description": "Search live flight positions with a structured query"
+    },
+    {
+      "name": "fa_count_flights",
+      "description": "Count flights matching a structured query"
+    },
+    {
+      "name": "fa_resolve_flight",
+      "description": "Resolve a flight ident to canonical (Standard/Premium tier)"
     },
     {
       "name": "fa_get_airport",
@@ -112,6 +132,18 @@
     {
       "name": "fa_get_airport_weather",
       "description": "Get airport METAR observations or TAF forecast"
+    },
+    {
+      "name": "fa_get_airport_flight_counts",
+      "description": "Get current flight counts at an airport"
+    },
+    {
+      "name": "fa_get_airport_routes",
+      "description": "Get popular routes between two airports"
+    },
+    {
+      "name": "fa_resolve_airport",
+      "description": "Resolve an airport code to canonical (Standard/Premium tier)"
     },
     {
       "name": "fa_get_operator",

@@ -109,4 +109,54 @@ export function registerAirportTools(server: McpServer): void {
       return textResult(data);
     },
   );
+
+  server.registerTool(
+    'fa_get_airport_flight_counts',
+    {
+      description: 'Get current flight counts at an airport: { departed, enroute, scheduled_arrivals, scheduled_departures }.',
+      annotations: { readOnlyHint: true, openWorldHint: true },
+      inputSchema: {
+        id: AirportCode.describe('Airport code (ICAO/IATA/LID)'),
+      },
+    },
+    async ({ id }) => {
+      const data = await client.get(`/airports/${id}/flights/counts`);
+      return textResult(data);
+    },
+  );
+
+  server.registerTool(
+    'fa_get_airport_routes',
+    {
+      description:
+        'Get the most popular routes (with aircraft types, counts, and filed altitudes) flown between an origin and destination airport.',
+      annotations: { readOnlyHint: true, openWorldHint: true },
+      inputSchema: {
+        id: AirportCode.describe('Origin airport code (ICAO/IATA/LID)'),
+        destination: AirportCode.describe('Destination airport code (ICAO/IATA/LID)'),
+        ...pageParams,
+      },
+    },
+    async ({ id, destination, max_pages, cursor }) => {
+      const data = await client.get(`/airports/${id}/routes/${destination}${qs({ max_pages, cursor })}`);
+      return textResult(data);
+    },
+  );
+
+  server.registerTool(
+    'fa_resolve_airport',
+    {
+      description:
+        'Resolve an airport code to its canonical AeroAPI identifier (and equivalents). NOTE: requires a Standard or Premium AeroAPI tier — the free Personal tier returns 401.',
+      annotations: { readOnlyHint: true, openWorldHint: true },
+      inputSchema: {
+        id: AirportCode.describe('Airport code (ICAO/IATA/LID) to canonicalize'),
+        id_type: z.enum(['icao', 'iata', 'lid']).optional().describe('Disambiguate how `id` is interpreted'),
+      },
+    },
+    async ({ id, id_type }) => {
+      const data = await client.get(`/airports/${id}/canonical${qs({ id_type })}`);
+      return textResult(data);
+    },
+  );
 }

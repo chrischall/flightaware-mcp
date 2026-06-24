@@ -62,6 +62,36 @@ describe('FlightAwareClient', () => {
     await expect(c.write('POST', '/alerts', {})).rejects.toThrow();
   });
 
+  it('caches GET responses within the TTL window and refetches after it expires', async () => {
+    let n = 0;
+    const fetchImpl = vi.fn(async () => new Response(JSON.stringify({ n: ++n }), { status: 200, headers: { 'content-type': 'application/json' } }));
+    let t = 1_000;
+    const c = new FlightAwareClient({ fetchImpl: fetchImpl as unknown as typeof fetch, cacheTtlMs: 5_000, now: () => t });
+    const a = await c.get('/airports/KJFK');
+    const b = await c.get('/airports/KJFK'); // served from cache — no second fetch
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+    expect(b).toEqual(a);
+    t += 6_000; // past the TTL
+    await c.get('/airports/KJFK'); // cache expired — refetch
+    expect(fetchImpl).toHaveBeenCalledTimes(2);
+  });
+
+  it('keys the cache by path (different paths are not conflated)', async () => {
+    const fetchImpl = vi.fn(async () => new Response('{"ok":1}', { status: 200 }));
+    const c = new FlightAwareClient({ fetchImpl: fetchImpl as unknown as typeof fetch, cacheTtlMs: 5_000, now: () => 1 });
+    await c.get('/airports/KJFK');
+    await c.get('/airports/KLAX');
+    expect(fetchImpl).toHaveBeenCalledTimes(2);
+  });
+
+  it('cacheTtlMs:0 disables caching', async () => {
+    const fetchImpl = vi.fn(async () => new Response('{"ok":1}', { status: 200 }));
+    const c = new FlightAwareClient({ fetchImpl: fetchImpl as unknown as typeof fetch, cacheTtlMs: 0 });
+    await c.get('/x');
+    await c.get('/x');
+    expect(fetchImpl).toHaveBeenCalledTimes(2);
+  });
+
   it('maps a 401 to a tier-aware message (AeroAPI returns 401 for tier-gated endpoints, not just bad keys)', async () => {
     const fetchImpl = vi.fn(async () => new Response('{"title":"Invalid API key","detail":"Alerts and Historical data are only available on Standard and Premium tiers."}', { status: 401 }));
     const c = new FlightAwareClient({ fetchImpl: fetchImpl as unknown as typeof fetch });

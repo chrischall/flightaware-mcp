@@ -19,13 +19,16 @@ describe('tool roster', () => {
     });
     const names = (await h.listTools()).map((t) => t.name).sort();
     expect(names).toEqual([
+      'fa_count_flights',
       'fa_create_alert',
       'fa_delete_alert',
       'fa_foresight_search',
       'fa_get_aircraft_owner',
       'fa_get_airport',
       'fa_get_airport_delays',
+      'fa_get_airport_flight_counts',
       'fa_get_airport_flights',
+      'fa_get_airport_routes',
       'fa_get_airport_weather',
       'fa_get_alert',
       'fa_get_alerts_endpoint',
@@ -42,6 +45,9 @@ describe('tool roster', () => {
       'fa_list_airports',
       'fa_list_alerts',
       'fa_list_operators',
+      'fa_resolve_airport',
+      'fa_resolve_flight',
+      'fa_search_flight_positions',
       'fa_search_flights',
       'fa_search_flights_advanced',
       'fa_set_alerts_endpoint',

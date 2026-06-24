@@ -46,12 +46,13 @@ npm install && npm run build
 | --- | --- | --- |
 | `AEROAPI_API_KEY` | yes | Your FlightAware AeroAPI key (sent as the `x-apikey` header). |
 | `AEROAPI_OUTPUT_DIR` | no | Default directory for flight-map PNGs (default: cwd). |
+| `AEROAPI_CACHE_TTL` | no | Seconds to cache identical GET responses to cut per-query billing (default: 15; `0` disables). |
 
 ## Tools
 
-**Flights:** `fa_get_flights`, `fa_search_flights`, `fa_search_flights_advanced`, `fa_get_flight_track`, `fa_get_flight_position`, `fa_get_flight_route`, `fa_get_flight_map`, `fa_get_flight_history`
+**Flights:** `fa_get_flights`, `fa_search_flights`, `fa_search_flights_advanced`, `fa_search_flight_positions`, `fa_count_flights`, `fa_get_flight_track`, `fa_get_flight_position`, `fa_get_flight_route`, `fa_get_flight_map`, `fa_get_flight_history`, `fa_resolve_flight`
 
-**Airports:** `fa_get_airport`, `fa_get_airport_flights`, `fa_list_airports`, `fa_get_nearby_airports`, `fa_get_airport_delays`, `fa_get_airport_weather`
+**Airports:** `fa_get_airport`, `fa_get_airport_flights`, `fa_get_airport_flight_counts`, `fa_get_airport_routes`, `fa_list_airports`, `fa_get_nearby_airports`, `fa_get_airport_delays`, `fa_get_airport_weather`, `fa_resolve_airport`
 
 **Operators / aircraft:** `fa_get_operator`, `fa_get_operator_flights`, `fa_list_operators`, `fa_get_aircraft_owner`
 
