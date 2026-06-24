@@ -26,8 +26,8 @@ Get a key at [flightaware.com/aeroapi/portal](https://www.flightaware.com/aeroap
 
 | Area | Tools |
 | --- | --- |
-| Flights | `fa_get_flights`, `fa_search_flights`, `fa_search_flights_advanced`, `fa_get_flight_track`, `fa_get_flight_position`, `fa_get_flight_route`, `fa_get_flight_map`, `fa_get_flight_history` |
-| Airports | `fa_get_airport`, `fa_get_airport_flights`, `fa_list_airports`, `fa_get_nearby_airports`, `fa_get_airport_delays`, `fa_get_airport_weather` |
+| Flights | `fa_get_flights`, `fa_search_flights`, `fa_search_flights_advanced`, `fa_search_flight_positions`, `fa_count_flights`, `fa_get_flight_track`, `fa_get_flight_position`, `fa_get_flight_route`, `fa_get_flight_map`, `fa_get_flight_history`, `fa_resolve_flight` |
+| Airports | `fa_get_airport`, `fa_get_airport_flights`, `fa_get_airport_flight_counts`, `fa_get_airport_routes`, `fa_list_airports`, `fa_get_nearby_airports`, `fa_get_airport_delays`, `fa_get_airport_weather`, `fa_resolve_airport` |
 | Operators / aircraft | `fa_get_operator`, `fa_get_operator_flights`, `fa_list_operators`, `fa_get_aircraft_owner` |
 | Schedules / predictive | `fa_get_scheduled_flights`, `fa_foresight_search` (premium tier) |
 | Alerts | `fa_list_alerts`, `fa_get_alert`, `fa_create_alert`, `fa_update_alert`, `fa_delete_alert`, `fa_get_alerts_endpoint`, `fa_set_alerts_endpoint` |
@@ -40,6 +40,7 @@ Alert mutations are **confirm-gated**: without `confirm: true` they return a dry
 | --- | --- | --- |
 | `AEROAPI_API_KEY` | yes | Your AeroAPI key (sent as the `x-apikey` header). |
 | `AEROAPI_OUTPUT_DIR` | no | Default directory for flight-map PNGs (default: cwd). |
+| `AEROAPI_CACHE_TTL` | no | Seconds to cache identical GET responses (default: 15; `0` disables). Cuts AeroAPI per-query billing. |
 
 ## Development
 

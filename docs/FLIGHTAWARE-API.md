@@ -49,9 +49,19 @@ hundreds of feet. Operators: `true`/`false`/`null`/`notnull`/`=`/`!=`/`<`/`>`/
 `<=`/`>=`/`match`/`notmatch`/`range`/`in`/`orig_or_dest`/`aircraftType`/`ident`/
 `ident_or_reg`/`airline`. A malformed query returns `400` ("Undisclosed/Error").
 
-**Still unexercised:** `fa_foresight_search` (premium add-on — needs the
-entitlement), and the tier-gated `/alerts*` + `fa_get_flight_history` (need
-Standard/Premium).
+**Round 3 (also confirmed `200`):** `fa_search_flight_positions`
+(`{positions[], …}`, advanced grammar), `fa_count_flights` (`{count}`),
+`fa_get_airport_flight_counts` (`{departed, enroute, scheduled_arrivals,
+scheduled_departures}`), `fa_get_airport_routes` (`{routes[], …}`). The two
+canonical resolvers (`fa_resolve_flight`, `fa_resolve_airport`) `401` on the
+Personal tier — they're grouped with the Standard/Premium-only data.
+
+**Still unexercised:** `fa_foresight_search` (premium add-on), and the
+tier-gated `/alerts*`, `fa_get_flight_history`, `fa_resolve_*` (Standard/Premium).
+
+**Response cache:** `client.get()` caches by full path for `AEROAPI_CACHE_TTL`
+seconds (default 15; `0` disables) to cut per-query billing — helpful given the
+rate-limit behavior above. Writes are never cached.
 
 ## Base + auth
 
@@ -77,6 +87,9 @@ Standard/Premium).
 | `fa_get_flights` | `GET /flights/{ident}` | ident = flight ident (e.g. `UAL123`, `AAL100`), registration (`N12345`), or `fa_flight_id`. Query: `ident_type` (`designator`/`registration`/`fa_flight_id`), `start`, `end`, `max_pages`, `cursor`. Returns `{ flights: [...], links, num_pages }`. **[verify-pending]** |
 | `fa_search_flights` | `GET /flights/search` | Simplified `-key value` query syntax (airborne flights). Keys: `-prefix -type -idents -identOrReg -airline -destination -origin -originOrDestination -aboveAltitude -belowAltitude -aboveGroundspeed -belowGroundspeed -latlong "MINLAT MINLON MAXLAT MAXLON" -filter {ga|airline}`. Query: `query`, `max_pages`, `cursor`. **[pinned-from-spec]** |
 | `fa_search_flights_advanced` | `GET /flights/search/advanced` | Structured `{operator key value}` query language (see grammar note below). Query: `query`, `max_pages`, `cursor`. **[verified]** |
+| `fa_search_flight_positions` | `GET /flights/search/positions` | Same `{operator key value}` grammar as advanced, returns `{positions[], links, num_pages}`. **[verified]** |
+| `fa_count_flights` | `GET /flights/search/count` | SIMPLIFIED `-key value` syntax (pairs with `/flights/search`, NOT the advanced grammar — verified: advanced grammar `400`s here). Returns `{count}`. **[verified]** |
+| `fa_resolve_flight` | `GET /flights/{ident}/canonical` | Canonical/alternate idents. Query: `ident_type`. **Standard/Premium tier** (Personal `401`s — verified). |
 | `fa_get_flight_track` | `GET /flights/{id}/track` | id = `fa_flight_id`. Positions log. Query: `include_estimated_positions`. **[verify-pending]** |
 | `fa_get_flight_position` | `GET /flights/{id}/position` | Last reported position for an in-air flight (`fa_flight_id`). **[verify-pending]** |
 | `fa_get_flight_route` | `GET /flights/{id}/route` | Decoded route fixes. **[verify-pending]** |
@@ -92,7 +105,10 @@ Standard/Premium).
 | `fa_list_airports` | `GET /airports` | Paged list of all airports. Query: `max_pages`, `cursor`. **[pinned-from-spec]** |
 | `fa_get_nearby_airports` | `GET /airports/nearby` | Query (required): `latitude`, `longitude`, `radius` (statute miles). Optional: `only_iap`, `max_pages`, `cursor`. **[pinned-from-spec]** |
 | `fa_get_airport_delays` | `GET /airports/delays` or `GET /airports/{id}/delays` | All current delays, or one airport's. Query: `max_pages`, `cursor`. **[pinned-from-spec]** (all-airports) / **[verify-pending]** (per-airport) |
-| `fa_get_airport_weather` | `GET /airports/{id}/weather/{observations\|forecast}` | METAR observations or TAF forecast. **[verify-pending]** |
+| `fa_get_airport_weather` | `GET /airports/{id}/weather/{observations\|forecast}` | METAR observations or TAF forecast. **[verified]** |
+| `fa_get_airport_flight_counts` | `GET /airports/{id}/flights/counts` | `{departed, enroute, scheduled_arrivals, scheduled_departures}`. **[verified]** |
+| `fa_get_airport_routes` | `GET /airports/{id}/routes/{destination}` | Popular routes between two airports → `{routes[], links, num_pages}` (route objects carry `aircraft_types`, `count`, `filed_altitude_min/max`, `route`, `route_distance`). **[verified]** |
+| `fa_resolve_airport` | `GET /airports/{id}/canonical` | Canonical airport id. Query: `id_type`. **Standard/Premium tier** (Personal `401`s — verified). |
 
 ## Operators
 

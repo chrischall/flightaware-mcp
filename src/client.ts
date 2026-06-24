@@ -19,6 +19,14 @@ const SERVICE = 'FlightAware AeroAPI';
 // AeroAPI is billed per query and the free Personal tier is small; keep the
 // default abort budget conservative. Most calls return in well under 30s.
 const REQUEST_TIMEOUT_MS = 30_000;
+// AeroAPI bills per query, so identical GETs in quick succession are wasteful.
+// A short-TTL response cache dedupes them. Default 15s — long enough to absorb
+// an agent re-reading the same board/flight, short enough that live positions
+// aren't dangerously stale. Override with AEROAPI_CACHE_TTL (seconds; 0 = off).
+const DEFAULT_CACHE_TTL_MS = 15_000;
+// Bound the cache so a long-lived server doesn't grow unbounded across many
+// distinct paths; oldest entries are evicted first.
+const CACHE_MAX_ENTRIES = 256;
 
 /** Result of a mutating call: parsed body (if any) plus the new-resource id
  * AeroAPI returns in the `Location` header on create. */
@@ -29,18 +37,32 @@ export interface WriteResult<T = unknown> {
   data?: T;
 }
 
+/** Resolve the read-cache TTL (ms) from AEROAPI_CACHE_TTL (seconds). A blank or
+ * non-numeric value falls back to the default; a valid `0` disables caching. */
+function readCacheTtlMs(): number {
+  const raw = readEnvVar('AEROAPI_CACHE_TTL');
+  if (raw === undefined) return DEFAULT_CACHE_TTL_MS;
+  const secs = Number(raw);
+  return Number.isFinite(secs) && secs >= 0 ? secs * 1000 : DEFAULT_CACHE_TTL_MS;
+}
+
 export class FlightAwareClient {
   private readonly apiKey: string | null;
   private readonly configError: Error | null;
   private readonly api: ApiClient;
   private readonly fetchImpl: typeof fetch;
+  private readonly cacheTtlMs: number;
+  private readonly now: () => number;
+  private readonly cache = new Map<string, { expiresAt: number; value: unknown }>();
 
   /**
    * Defer the config error so the server still boots (and answers the host's
    * install-time tools/list probe) when AEROAPI_API_KEY isn't set yet. The
    * error is re-raised at request time via requireKey().
    */
-  constructor(opts: { fetchImpl?: typeof fetch } = {}) {
+  constructor(opts: { fetchImpl?: typeof fetch; cacheTtlMs?: number; now?: () => number } = {}) {
+    this.now = opts.now ?? Date.now;
+    this.cacheTtlMs = opts.cacheTtlMs ?? readCacheTtlMs();
     const key = readEnvVar('AEROAPI_API_KEY');
     if (!key) {
       this.apiKey = null;
@@ -85,9 +107,32 @@ export class FlightAwareClient {
     return this.apiKey!;
   }
 
-  /** GET a JSON resource. `path` must already include any query string. */
+  /**
+   * GET a JSON resource. `path` must already include any query string. Results
+   * are served from a short-TTL in-memory cache (keyed by the full path) to cut
+   * repeated per-query billing; see DEFAULT_CACHE_TTL_MS / AEROAPI_CACHE_TTL.
+   */
   async get<T = unknown>(path: string): Promise<T> {
-    return this.api.fetchJson<T>('GET', path);
+    if (this.cacheTtlMs > 0) {
+      const hit = this.cache.get(path);
+      if (hit && hit.expiresAt > this.now()) return hit.value as T;
+    }
+    const value = await this.api.fetchJson<T>('GET', path);
+    if (this.cacheTtlMs > 0) {
+      if (this.cache.size >= CACHE_MAX_ENTRIES) {
+        // Evict expired entries first; if still full, drop the oldest (Map
+        // preserves insertion order, so the first key is the oldest).
+        const t = this.now();
+        for (const [k, v] of this.cache) if (v.expiresAt <= t) this.cache.delete(k);
+        while (this.cache.size >= CACHE_MAX_ENTRIES) {
+          const oldest = this.cache.keys().next().value;
+          if (oldest === undefined) break;
+          this.cache.delete(oldest);
+        }
+      }
+      this.cache.set(path, { expiresAt: this.now() + this.cacheTtlMs, value });
+    }
+    return value;
   }
 
   /**

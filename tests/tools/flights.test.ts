@@ -54,6 +54,32 @@ describe('flight tools', () => {
     await h.close();
   });
 
+  it('fa_search_flight_positions hits /flights/search/positions', async () => {
+    const get = vi.spyOn(client, 'get').mockResolvedValue({ positions: [] });
+    const h = await createTestHarness(registerFlightTools);
+    await h.callTool('fa_search_flight_positions', { query: '{match ident UAL*}' });
+    expect(get.mock.calls[0][0]).toContain('/flights/search/positions?');
+    await h.close();
+  });
+
+  it('fa_count_flights hits /flights/search/count', async () => {
+    const get = vi.spyOn(client, 'get').mockResolvedValue({ count: 42 });
+    const h = await createTestHarness(registerFlightTools);
+    await h.callTool('fa_count_flights', { query: '-airline UAL' });
+    expect(get.mock.calls[0][0]).toContain('/flights/search/count?');
+    await h.close();
+  });
+
+  it('fa_resolve_flight hits /flights/{ident}/canonical', async () => {
+    const get = vi.spyOn(client, 'get').mockResolvedValue({ idents: [] });
+    const h = await createTestHarness(registerFlightTools);
+    await h.callTool('fa_resolve_flight', { ident: 'UAL123', ident_type: 'designator' });
+    const path = get.mock.calls[0][0];
+    expect(path).toContain('/flights/UAL123/canonical');
+    expect(path).toContain('ident_type=designator');
+    await h.close();
+  });
+
   it('rejects an ident that could escape the URL path', async () => {
     const get = vi.spyOn(client, 'get').mockResolvedValue({});
     const h = await createTestHarness(registerFlightTools);

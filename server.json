@@ -29,6 +29,13 @@
           "isRequired": false,
           "format": "string",
           "isSecret": false
+        },
+        {
+          "name": "AEROAPI_CACHE_TTL",
+          "description": "Seconds to cache identical GET responses (default 15; 0 disables)",
+          "isRequired": false,
+          "format": "string",
+          "isSecret": false
         }
       ]
     }

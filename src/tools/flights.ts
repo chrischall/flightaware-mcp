@@ -157,4 +157,54 @@ export function registerFlightTools(server: McpServer): void {
       return textResult(data);
     },
   );
+
+  server.registerTool(
+    'fa_search_flight_positions',
+    {
+      description:
+        'Search live flight POSITIONS using the structured "{operator key value}" query language (same grammar as fa_search_flights_advanced — NOT the simplified "-key value" syntax). Returns position points rather than flight summaries. Example: {match ident UAL*} {> alt 300}.',
+      annotations: { readOnlyHint: true, openWorldHint: true },
+      inputSchema: {
+        query: z.string().min(1).describe('Structured "{operator key value}" query, e.g. {match ident UAL*} {> alt 300}'),
+        ...pageParams,
+      },
+    },
+    async ({ query, max_pages, cursor }) => {
+      const data = await client.get(`/flights/search/positions${qs({ query, max_pages, cursor })}`);
+      return textResult(data);
+    },
+  );
+
+  server.registerTool(
+    'fa_count_flights',
+    {
+      description:
+        'Count flights matching a query without returning the flights themselves. Returns { count }. Uses the SIMPLIFIED "-key value" syntax (same as fa_search_flights, NOT the structured grammar of fa_search_flights_advanced). Example: -airline UAL -belowAltitude 30000.',
+      annotations: { readOnlyHint: true, openWorldHint: true },
+      inputSchema: {
+        query: z.string().min(1).describe('Simplified "-key value" search string (same syntax as fa_search_flights), e.g. -airline UAL'),
+      },
+    },
+    async ({ query }) => {
+      const data = await client.get(`/flights/search/count${qs({ query })}`);
+      return textResult(data);
+    },
+  );
+
+  server.registerTool(
+    'fa_resolve_flight',
+    {
+      description:
+        'Resolve a flight ident (designator/registration) to its canonical form and any alternate idents. NOTE: requires a Standard or Premium AeroAPI tier — the free Personal tier returns 401.',
+      annotations: { readOnlyHint: true, openWorldHint: true },
+      inputSchema: {
+        ident: FlightIdent.describe('Flight designator or registration to canonicalize'),
+        ident_type: z.enum(['designator', 'registration', 'fa_flight_id']).optional().describe('Disambiguate how `ident` is interpreted'),
+      },
+    },
+    async ({ ident, ident_type }) => {
+      const data = await client.get(`/flights/${ident}/canonical${qs({ ident_type })}`);
+      return textResult(data);
+    },
+  );
 }

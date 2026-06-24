@@ -4,11 +4,12 @@ Guidance for Claude working in this repo.
 
 ## TL;DR
 
-v0.1.0: **FlightAware AeroAPI** (v4) MCP server. Wraps the AeroAPI REST API
-(`https://aeroapi.flightaware.com/aeroapi`) and exposes 27 tools to Claude over
-stdio: flight lookup/search/track/position/route/map/history, airport boards +
-delays + weather + nearby, operators, aircraft owner, scheduled flights,
-Foresight predictive search, and flight-alert management.
+**FlightAware AeroAPI** (v4) MCP server. Wraps the AeroAPI REST API
+(`https://aeroapi.flightaware.com/aeroapi`) and exposes 33 tools to Claude over
+stdio: flight lookup/search/positions/count/track/position/route/map/history/
+canonical, airport boards + counts + routes + delays + weather + nearby +
+canonical, operators, aircraft owner, scheduled flights, Foresight predictive
+search, and flight-alert management.
 
 Auth is an AeroAPI key (`AEROAPI_API_KEY`) sent in the **`x-apikey`** header —
 AeroAPI does **not** use `Authorization: Bearer`. This is the bearer/direct-API
@@ -22,7 +23,13 @@ and an empty body on delete (neither fits a JSON-only client). No fetchproxy.
 ```
 AEROAPI_API_KEY=<key>     # Required. Create at https://www.flightaware.com/aeroapi/portal/
 AEROAPI_OUTPUT_DIR=<dir>  # Optional. Where flight-map PNGs are written (default: cwd)
+AEROAPI_CACHE_TTL=<secs>  # Optional. Read-cache TTL in seconds (default 15; 0 disables)
 ```
+
+`client.get()` is backed by a short-TTL in-memory cache keyed by full path
+(`AEROAPI_CACHE_TTL`, default 15s) to cut AeroAPI's per-query billing; writes
+are never cached. Tier note: alerts, `fa_get_flight_history`, and the
+`fa_resolve_*` canonical tools require a Standard/Premium tier (Personal 401s).
 
 Loaded via `loadDotenvSafely` from `.env` next to `dist/` (failure swallowed —
 the .mcpb bundle has no dotenv). The config error is **deferred**: the server

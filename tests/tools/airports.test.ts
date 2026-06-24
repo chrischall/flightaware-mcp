@@ -48,6 +48,32 @@ describe('airport tools', () => {
     await h.close();
   });
 
+  it('fa_get_airport_flight_counts hits /airports/{id}/flights/counts', async () => {
+    const get = vi.spyOn(client, 'get').mockResolvedValue({ departed: 1 });
+    const h = await createTestHarness(registerAirportTools);
+    await h.callTool('fa_get_airport_flight_counts', { id: 'KJFK' });
+    expect(get.mock.calls[0][0]).toBe('/airports/KJFK/flights/counts');
+    await h.close();
+  });
+
+  it('fa_get_airport_routes interpolates origin + destination', async () => {
+    const get = vi.spyOn(client, 'get').mockResolvedValue({ routes: [] });
+    const h = await createTestHarness(registerAirportTools);
+    await h.callTool('fa_get_airport_routes', { id: 'KJFK', destination: 'KLAX' });
+    expect(get.mock.calls[0][0]).toMatch(/^\/airports\/KJFK\/routes\/KLAX(\?|$)/);
+    await h.close();
+  });
+
+  it('fa_resolve_airport hits /airports/{id}/canonical', async () => {
+    const get = vi.spyOn(client, 'get').mockResolvedValue({});
+    const h = await createTestHarness(registerAirportTools);
+    await h.callTool('fa_resolve_airport', { id: 'JFK', id_type: 'iata' });
+    const path = get.mock.calls[0][0];
+    expect(path).toContain('/airports/JFK/canonical');
+    expect(path).toContain('id_type=iata');
+    await h.close();
+  });
+
   it('rejects a non-alphanumeric airport code', async () => {
     const get = vi.spyOn(client, 'get').mockResolvedValue({});
     const h = await createTestHarness(registerAirportTools);
