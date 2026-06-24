@@ -63,13 +63,19 @@ export class FlightAwareClient {
       timeout: REQUEST_TIMEOUT_MS,
       retry: { count: 1, delayMs: 1000 },
       fetchImpl: this.fetchImpl,
+      // AeroAPI returns 401 for BOTH an invalid key AND a valid key hitting an
+      // endpoint above its subscription tier (alerts and historical data need
+      // the Standard/Premium tier — the free Personal tier 401s them with a
+      // "tier" detail). onUnauthorized can't see the body, so the message names
+      // both causes rather than falsely asserting the key is bad.
       onUnauthorized: () =>
-        new McpToolError('AEROAPI_API_KEY is invalid or missing', {
-          hint: 'Verify the key at https://www.flightaware.com/aeroapi/portal/',
-        }),
+        new McpToolError(
+          'AeroAPI returned 401 Unauthorized — either AEROAPI_API_KEY is invalid, or this endpoint requires a higher subscription tier (Alerts and historical data need the Standard or Premium tier; the free Personal tier does not include them).',
+          { hint: 'Check your key and plan at https://www.flightaware.com/aeroapi/portal/' },
+        ),
       onRateLimited: () =>
         new McpToolError('Rate limited by AeroAPI', {
-          hint: 'AeroAPI bills per query and the Personal tier is limited — slow down or check your usage in the portal.',
+          hint: 'AeroAPI bills per query and rate-limits each tier — space out calls or check your usage in the portal.',
         }),
     });
   }

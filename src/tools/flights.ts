@@ -140,7 +140,8 @@ export function registerFlightTools(server: McpServer): void {
   server.registerTool(
     'fa_get_flight_history',
     {
-      description: 'Get historical flights for an ident (designator, registration, or fa_flight_id) beyond the recent window covered by fa_get_flights.',
+      description:
+        'Get historical flights for an ident (designator, registration, or fa_flight_id) beyond the recent window covered by fa_get_flights. NOTE: historical data requires a Standard or Premium AeroAPI tier — the free Personal tier returns 401.',
       annotations: { readOnlyHint: true, openWorldHint: true },
       inputSchema: {
         ident: FlightIdent.describe('Flight designator, registration, or fa_flight_id'),

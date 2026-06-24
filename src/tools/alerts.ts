@@ -4,6 +4,11 @@ import { textResult, schemaConfirm } from '@chrischall/mcp-utils';
 import { client } from '../client.js';
 import { AirportCode, AlertId, FlightIdent, pageParams, qs } from './shared.js';
 
+// The Alerts API requires a Standard/Premium AeroAPI tier; the free Personal
+// tier returns 401 for every /alerts endpoint. Surfaced in each tool's
+// description so the gating is obvious before the call.
+const TIER = ' Requires a Standard or Premium AeroAPI tier (the free Personal tier returns 401).';
+
 /** The mutable fields of a flight alert (shared by create + update). */
 const alertConfigSchema = {
   ident: FlightIdent.optional().describe('Flight ident / designator to watch (e.g. UAL123)'),
@@ -39,7 +44,7 @@ export function registerAlertTools(server: McpServer): void {
   server.registerTool(
     'fa_list_alerts',
     {
-      description: 'List the flight alerts configured on your AeroAPI account.',
+      description: 'List the flight alerts configured on your AeroAPI account.' + TIER,
       annotations: { readOnlyHint: true, openWorldHint: true },
       inputSchema: { ...pageParams },
     },
@@ -52,7 +57,7 @@ export function registerAlertTools(server: McpServer): void {
   server.registerTool(
     'fa_get_alert',
     {
-      description: 'Get a single configured flight alert by its id.',
+      description: 'Get a single configured flight alert by its id.' + TIER,
       annotations: { readOnlyHint: true, openWorldHint: true },
       inputSchema: { id: AlertId.describe('Alert id') },
     },
@@ -66,7 +71,7 @@ export function registerAlertTools(server: McpServer): void {
     'fa_create_alert',
     {
       description:
-        'Create a flight alert on your AeroAPI account. Without confirm:true this returns a dry-run preview of the request and makes NO network call; with confirm:true it creates the alert.',
+        'Create a flight alert on your AeroAPI account. Without confirm:true this returns a dry-run preview of the request and makes NO network call; with confirm:true it creates the alert.' + TIER,
       annotations: { readOnlyHint: false, idempotentHint: false, openWorldHint: true },
       inputSchema: { ...alertConfigSchema, confirm: schemaConfirm },
     },
@@ -84,7 +89,7 @@ export function registerAlertTools(server: McpServer): void {
     'fa_update_alert',
     {
       description:
-        'Update an existing flight alert (replaces its configuration). Without confirm:true this returns a dry-run preview and makes NO network call; with confirm:true it applies the update.',
+        'Update an existing flight alert (replaces its configuration). Without confirm:true this returns a dry-run preview and makes NO network call; with confirm:true it applies the update.' + TIER,
       annotations: { readOnlyHint: false, idempotentHint: true, openWorldHint: true },
       inputSchema: { id: AlertId.describe('Alert id to update'), ...alertConfigSchema, confirm: schemaConfirm },
     },
@@ -103,7 +108,7 @@ export function registerAlertTools(server: McpServer): void {
     'fa_delete_alert',
     {
       description:
-        'Delete a flight alert by id. Without confirm:true this returns a dry-run preview and makes NO network call; with confirm:true it deletes the alert.',
+        'Delete a flight alert by id. Without confirm:true this returns a dry-run preview and makes NO network call; with confirm:true it deletes the alert.' + TIER,
       annotations: { readOnlyHint: false, idempotentHint: true, openWorldHint: true },
       inputSchema: { id: AlertId.describe('Alert id to delete'), confirm: schemaConfirm },
     },
@@ -120,7 +125,7 @@ export function registerAlertTools(server: McpServer): void {
   server.registerTool(
     'fa_get_alerts_endpoint',
     {
-      description: 'Get the current delivery (webhook) endpoint configured for your AeroAPI alerts.',
+      description: 'Get the current delivery (webhook) endpoint configured for your AeroAPI alerts.' + TIER,
       annotations: { readOnlyHint: true, openWorldHint: true },
       inputSchema: {},
     },
@@ -134,7 +139,7 @@ export function registerAlertTools(server: McpServer): void {
     'fa_set_alerts_endpoint',
     {
       description:
-        'Set the delivery (webhook) endpoint AeroAPI POSTs alert notifications to. Without confirm:true this returns a dry-run preview and makes NO network call; with confirm:true it applies the change.',
+        'Set the delivery (webhook) endpoint AeroAPI POSTs alert notifications to. Without confirm:true this returns a dry-run preview and makes NO network call; with confirm:true it applies the change.' + TIER,
       annotations: { readOnlyHint: false, idempotentHint: true, openWorldHint: true },
       inputSchema: {
         url: z.string().url().describe('HTTPS URL AeroAPI will POST alert payloads to'),
