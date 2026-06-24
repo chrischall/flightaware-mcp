@@ -1,7 +1,7 @@
 {
   "name": "flightaware-mcp",
   "displayName": "FlightAware",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "MCP server for FlightAware AeroAPI — live flight tracking, airports, operators, schedules, and alerts",
   "author": {
     "name": "Chris Hall",

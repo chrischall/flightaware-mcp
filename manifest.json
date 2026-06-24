@@ -3,7 +3,7 @@
   "manifest_version": "0.3",
   "name": "flightaware-mcp",
   "display_name": "FlightAware",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Live flight tracking and aviation data via FlightAware AeroAPI — flights, airports, operators, schedules, and alerts",
   "author": {
     "name": "Chris Chall",
@@ -57,33 +57,114 @@
     }
   },
   "tools": [
-    { "name": "fa_get_flights", "description": "Get flights for an ident, registration, or fa_flight_id" },
-    { "name": "fa_search_flights", "description": "Search airborne flights with the simplified query syntax" },
-    { "name": "fa_search_flights_advanced", "description": "Search flights with the full Boolean query language" },
-    { "name": "fa_get_flight_track", "description": "Get the position track for a flight" },
-    { "name": "fa_get_flight_position", "description": "Get the latest position for an in-air flight" },
-    { "name": "fa_get_flight_route", "description": "Get the decoded route for a flight" },
-    { "name": "fa_get_flight_map", "description": "Render a map image (PNG) of a flight" },
-    { "name": "fa_get_flight_history", "description": "Get historical flights for an ident" },
-    { "name": "fa_get_airport", "description": "Get details for an airport by code" },
-    { "name": "fa_get_airport_flights", "description": "Get an airport flight board (arrivals/departures/scheduled)" },
-    { "name": "fa_list_airports", "description": "List airports known to AeroAPI" },
-    { "name": "fa_get_nearby_airports", "description": "Find airports near a latitude/longitude" },
-    { "name": "fa_get_airport_delays", "description": "Get current airport delays" },
-    { "name": "fa_get_airport_weather", "description": "Get airport METAR observations or TAF forecast" },
-    { "name": "fa_get_operator", "description": "Get details for an operator (airline) by code" },
-    { "name": "fa_get_operator_flights", "description": "Get an operator flight board" },
-    { "name": "fa_list_operators", "description": "List operators (airlines) known to AeroAPI" },
-    { "name": "fa_get_aircraft_owner", "description": "Get the registered owner of an aircraft" },
-    { "name": "fa_get_scheduled_flights", "description": "Get airline-scheduled flights between two dates" },
-    { "name": "fa_foresight_search", "description": "Predictive flight search via Foresight (premium tier)" },
-    { "name": "fa_list_alerts", "description": "List configured flight alerts" },
-    { "name": "fa_get_alert", "description": "Get a single configured flight alert" },
-    { "name": "fa_create_alert", "description": "Create a flight alert (confirm-gated)" },
-    { "name": "fa_update_alert", "description": "Update a flight alert (confirm-gated)" },
-    { "name": "fa_delete_alert", "description": "Delete a flight alert (confirm-gated)" },
-    { "name": "fa_get_alerts_endpoint", "description": "Get the alert delivery endpoint" },
-    { "name": "fa_set_alerts_endpoint", "description": "Set the alert delivery endpoint (confirm-gated)" }
+    {
+      "name": "fa_get_flights",
+      "description": "Get flights for an ident, registration, or fa_flight_id"
+    },
+    {
+      "name": "fa_search_flights",
+      "description": "Search airborne flights with the simplified query syntax"
+    },
+    {
+      "name": "fa_search_flights_advanced",
+      "description": "Search flights with the full Boolean query language"
+    },
+    {
+      "name": "fa_get_flight_track",
+      "description": "Get the position track for a flight"
+    },
+    {
+      "name": "fa_get_flight_position",
+      "description": "Get the latest position for an in-air flight"
+    },
+    {
+      "name": "fa_get_flight_route",
+      "description": "Get the decoded route for a flight"
+    },
+    {
+      "name": "fa_get_flight_map",
+      "description": "Render a map image (PNG) of a flight"
+    },
+    {
+      "name": "fa_get_flight_history",
+      "description": "Get historical flights for an ident"
+    },
+    {
+      "name": "fa_get_airport",
+      "description": "Get details for an airport by code"
+    },
+    {
+      "name": "fa_get_airport_flights",
+      "description": "Get an airport flight board (arrivals/departures/scheduled)"
+    },
+    {
+      "name": "fa_list_airports",
+      "description": "List airports known to AeroAPI"
+    },
+    {
+      "name": "fa_get_nearby_airports",
+      "description": "Find airports near a latitude/longitude"
+    },
+    {
+      "name": "fa_get_airport_delays",
+      "description": "Get current airport delays"
+    },
+    {
+      "name": "fa_get_airport_weather",
+      "description": "Get airport METAR observations or TAF forecast"
+    },
+    {
+      "name": "fa_get_operator",
+      "description": "Get details for an operator (airline) by code"
+    },
+    {
+      "name": "fa_get_operator_flights",
+      "description": "Get an operator flight board"
+    },
+    {
+      "name": "fa_list_operators",
+      "description": "List operators (airlines) known to AeroAPI"
+    },
+    {
+      "name": "fa_get_aircraft_owner",
+      "description": "Get the registered owner of an aircraft"
+    },
+    {
+      "name": "fa_get_scheduled_flights",
+      "description": "Get airline-scheduled flights between two dates"
+    },
+    {
+      "name": "fa_foresight_search",
+      "description": "Predictive flight search via Foresight (premium tier)"
+    },
+    {
+      "name": "fa_list_alerts",
+      "description": "List configured flight alerts"
+    },
+    {
+      "name": "fa_get_alert",
+      "description": "Get a single configured flight alert"
+    },
+    {
+      "name": "fa_create_alert",
+      "description": "Create a flight alert (confirm-gated)"
+    },
+    {
+      "name": "fa_update_alert",
+      "description": "Update a flight alert (confirm-gated)"
+    },
+    {
+      "name": "fa_delete_alert",
+      "description": "Delete a flight alert (confirm-gated)"
+    },
+    {
+      "name": "fa_get_alerts_endpoint",
+      "description": "Get the alert delivery endpoint"
+    },
+    {
+      "name": "fa_set_alerts_endpoint",
+      "description": "Set the alert delivery endpoint (confirm-gated)"
+    }
   ],
   "compatibility": {
     "platforms": [
