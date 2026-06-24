@@ -35,9 +35,23 @@ key isn't mislabeled as invalid.
 seconds drew `429`s that cleared when spaced. Interactive (one-call-at-a-time)
 MCP use is unaffected; the client retries `429` once.
 
-**Still unexercised (high-confidence from spec):** `fa_search_flights_advanced`,
-`fa_list_airports`, `fa_list_operators`, `fa_get_operator_flights`,
-`fa_get_airport_weather` (forecast), `fa_foresight_search` (premium).
+**Round 2 (also confirmed `200`):** `fa_list_airports` (`{airports[], …}`),
+`fa_list_operators` (`{operators[], …}`), `fa_get_operator_flights`
+(`{scheduled, arrivals, enroute, links, num_pages}` for the `all` board),
+`fa_get_airport_weather` forecast (`{airport_code, raw_forecast, decoded_forecast, …}`),
+and `fa_search_flights_advanced` (`{flights[], …}`).
+
+**Advanced-query grammar (`/flights/search/advanced`):** a space-separated list
+of `{operator key value}` predicates — NOT the simplified `-key value` syntax of
+`fa_search_flights`. Verified example: `{match ident UAL*} {> alt 300}`. Field
+names matter: it's `orig`/`dest` (ICAO), not `origin`/`destination`; `alt` is in
+hundreds of feet. Operators: `true`/`false`/`null`/`notnull`/`=`/`!=`/`<`/`>`/
+`<=`/`>=`/`match`/`notmatch`/`range`/`in`/`orig_or_dest`/`aircraftType`/`ident`/
+`ident_or_reg`/`airline`. A malformed query returns `400` ("Undisclosed/Error").
+
+**Still unexercised:** `fa_foresight_search` (premium add-on — needs the
+entitlement), and the tier-gated `/alerts*` + `fa_get_flight_history` (need
+Standard/Premium).
 
 ## Base + auth
 
@@ -62,7 +76,7 @@ MCP use is unaffected; the client retries `429` once.
 | --- | --- | --- |
 | `fa_get_flights` | `GET /flights/{ident}` | ident = flight ident (e.g. `UAL123`, `AAL100`), registration (`N12345`), or `fa_flight_id`. Query: `ident_type` (`designator`/`registration`/`fa_flight_id`), `start`, `end`, `max_pages`, `cursor`. Returns `{ flights: [...], links, num_pages }`. **[verify-pending]** |
 | `fa_search_flights` | `GET /flights/search` | Simplified `-key value` query syntax (airborne flights). Keys: `-prefix -type -idents -identOrReg -airline -destination -origin -originOrDestination -aboveAltitude -belowAltitude -aboveGroundspeed -belowGroundspeed -latlong "MINLAT MINLON MAXLAT MAXLON" -filter {ga|airline}`. Query: `query`, `max_pages`, `cursor`. **[pinned-from-spec]** |
-| `fa_search_flights_advanced` | `GET /flights/search/advanced` | Full Boolean query language in `query`. Query: `query`, `max_pages`, `cursor`. **[pinned-from-spec]** |
+| `fa_search_flights_advanced` | `GET /flights/search/advanced` | Structured `{operator key value}` query language (see grammar note below). Query: `query`, `max_pages`, `cursor`. **[verified]** |
 | `fa_get_flight_track` | `GET /flights/{id}/track` | id = `fa_flight_id`. Positions log. Query: `include_estimated_positions`. **[verify-pending]** |
 | `fa_get_flight_position` | `GET /flights/{id}/position` | Last reported position for an in-air flight (`fa_flight_id`). **[verify-pending]** |
 | `fa_get_flight_route` | `GET /flights/{id}/route` | Decoded route fixes. **[verify-pending]** |

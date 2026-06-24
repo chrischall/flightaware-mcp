@@ -46,10 +46,12 @@ export function registerFlightTools(server: McpServer): void {
     'fa_search_flights_advanced',
     {
       description:
-        'Search flights using AeroAPI\'s full Boolean query language (more expressive than fa_search_flights). The `query` is a parenthesized expression of field predicates, e.g. {= origin KORD} {> alt 30000}.',
+        'Search flights using AeroAPI\'s full structured query language (more expressive than fa_search_flights). The `query` is a space-separated list of {operator key value} predicates, e.g. "{match ident UAL*} {> alt 300} {= dest KLAX}". ' +
+        'Operators: true/false/null/notnull/=/!=/</>/<=/>=, match/notmatch (case-insensitive wildcards), range (two values), in/orig_or_dest/aircraftType/ident/ident_or_reg ({a b c} value lists), airline (1=airline, 0=GA). ' +
+        'Common keys: ident, orig, dest (ICAO codes), aircraftType, alt (hundreds of ft), prefix, lifeguard, cancelled, arrived.',
       annotations: { readOnlyHint: true, openWorldHint: true },
       inputSchema: {
-        query: z.string().min(1).describe('Boolean query expression'),
+        query: z.string().min(1).describe('Structured "{operator key value}" query, e.g. {match ident UAL*} {> alt 300}'),
         ...pageParams,
       },
     },
