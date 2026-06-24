@@ -8,9 +8,36 @@ spec version 4.17.1 at capture time) plus the well-documented v4 surface. The
 > **Verification status.** Endpoints marked **[pinned-from-spec]** have their
 > request shape confirmed against the public OpenAPI. Endpoints marked
 > **[verify-pending]** are coded from the documented v4 surface and MUST be
-> re-verified against a real `200` once an `AEROAPI_API_KEY` is available
-> (free Personal tier — 500 calls/mo — is enough). Do not treat a
-> verify-pending response shape as confirmed.
+> re-verified against a real `200`. See the live-verification results below.
+
+## Live verification — 2026-06-23 (Personal tier key)
+
+Confirmed against real `200`s (response field names verified): `fa_get_airport`
+(`{airport_code, code_icao, code_iata, …}`), `fa_get_operator`
+(`{icao, iata, callsign, name, …}`), `fa_get_airport_flights` (`{departures,
+links, num_pages}`), `fa_get_flight_position`, `fa_get_flight_track`
+(`{actual_distance, positions[]}`), `fa_get_flight_route` (`{route_distance,
+fixes[]}`), `fa_get_flight_map` (`{map: "<base64 PNG>"}`, ~65 KB),
+`fa_get_flights` (`{flights[], links, num_pages}`), `fa_get_aircraft_owner`
+(`{owner}`), `fa_search_flights` (`{flights[], …}`), `fa_get_airport_delays`
+(`{delays[], …}`), `fa_get_nearby_airports` (`{airports[], …}`),
+`fa_get_airport_weather` (`{observations[], …}`), `fa_get_scheduled_flights`
+(`{scheduled[], …}`).
+
+**Tier-gated (verified `401` on the free Personal tier):** all `/alerts*`
+endpoints AND `/history/*` (`fa_get_flight_history`). AeroAPI's body:
+*"Alerts and Historical data are only available on Standard and Premium tiers."*
+Note AeroAPI returns `401` (title "Invalid API key") for tier-gating, NOT
+`402`/`403` — the client's 401 message names both causes so a valid Personal
+key isn't mislabeled as invalid.
+
+**Rate limiting:** the Personal tier throttles bursts — a dozen calls in a few
+seconds drew `429`s that cleared when spaced. Interactive (one-call-at-a-time)
+MCP use is unaffected; the client retries `429` once.
+
+**Still unexercised (high-confidence from spec):** `fa_search_flights_advanced`,
+`fa_list_airports`, `fa_list_operators`, `fa_get_operator_flights`,
+`fa_get_airport_weather` (forecast), `fa_foresight_search` (premium).
 
 ## Base + auth
 

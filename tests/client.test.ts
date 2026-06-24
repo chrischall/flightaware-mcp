@@ -62,6 +62,12 @@ describe('FlightAwareClient', () => {
     await expect(c.write('POST', '/alerts', {})).rejects.toThrow();
   });
 
+  it('maps a 401 to a tier-aware message (AeroAPI returns 401 for tier-gated endpoints, not just bad keys)', async () => {
+    const fetchImpl = vi.fn(async () => new Response('{"title":"Invalid API key","detail":"Alerts and Historical data are only available on Standard and Premium tiers."}', { status: 401 }));
+    const c = new FlightAwareClient({ fetchImpl: fetchImpl as unknown as typeof fetch });
+    await expect(c.get('/alerts')).rejects.toThrow(/tier/i);
+  });
+
   it('defers the config error: no key boots, but a call rejects with an actionable hint', async () => {
     delete process.env.AEROAPI_API_KEY;
     const fetchImpl = vi.fn();
