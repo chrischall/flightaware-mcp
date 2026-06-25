@@ -1,6 +1,6 @@
 {
   "name": "@chrischall/flightaware-mcp",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "mcpName": "io.github.chrischall/flightaware-mcp",
   "description": "FlightAware AeroAPI MCP server for Claude — live flight tracking, airports, operators, schedules, and alerts. Developed and maintained by AI (Claude Code).",
   "author": "Claude Code (AI) <https://www.anthropic.com/claude>",
