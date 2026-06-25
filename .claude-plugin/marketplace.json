@@ -7,7 +7,7 @@
   },
   "metadata": {
     "description": "MCP server for FlightAware AeroAPI — live flight tracking, airports, operators, schedules, and alerts",
-    "version": "0.2.0"
+    "version": "0.3.0"
   },
   "plugins": [
     {
@@ -15,7 +15,7 @@
       "displayName": "FlightAware",
       "source": "./",
       "description": "Live flight tracking and aviation data via FlightAware AeroAPI — flights, airports, operators, schedules, and alerts",
-      "version": "0.2.0",
+      "version": "0.3.0",
       "author": {
         "name": "Chris Hall"
       },

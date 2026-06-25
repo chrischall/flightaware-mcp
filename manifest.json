@@ -3,7 +3,7 @@
   "manifest_version": "0.3",
   "name": "flightaware-mcp",
   "display_name": "FlightAware",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Live flight tracking and aviation data via FlightAware AeroAPI — flights, airports, operators, schedules, and alerts",
   "author": {
     "name": "Chris Chall",
