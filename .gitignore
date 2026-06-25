@@ -1,5 +1,10 @@
 node_modules/
 dist/
+coverage/
 .env
 .env.*
 *.tgz
+*.tsbuildinfo
+*.mcpb
+.DS_Store
+*.log

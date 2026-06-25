@@ -119,6 +119,29 @@ describe('FlightAwareClient', () => {
     expect(fetchImpl).toHaveBeenCalledTimes(2);
   });
 
+  it('evicts entries once the cache is full (expired purge + oldest-drop)', async () => {
+    const fetchImpl = vi.fn(async () => new Response('{"ok":1}', { status: 200 }));
+    let t = 1_000;
+    const c = new FlightAwareClient({ fetchImpl: fetchImpl as unknown as typeof fetch, cacheTtlMs: 1_000, now: () => t });
+    // Fill well past the 256-entry cap with fresh entries → exercises the
+    // oldest-drop while-loop.
+    for (let i = 0; i < 300; i++) await c.get(`/p/${i}`);
+    expect(fetchImpl).toHaveBeenCalledTimes(300);
+    // Jump past the TTL so everything is expired, then add one more → exercises
+    // the expired-purge branch. No crash, and it actually fetched.
+    t += 5_000;
+    await c.get('/p/new');
+    expect(fetchImpl).toHaveBeenCalledTimes(301);
+  });
+
+  it('write() surfaces a non-JSON body verbatim', async () => {
+    const fetchImpl = vi.fn(async () => new Response('OK', { status: 200 }));
+    const c = new FlightAwareClient({ fetchImpl: fetchImpl as unknown as typeof fetch });
+    const res = await c.write('PUT', '/alerts/endpoint', { url: 'x' });
+    expect(res.data).toBe('OK');
+    expect(res.status).toBe(200);
+  });
+
   it('cacheTtlMs:0 disables caching', async () => {
     const fetchImpl = vi.fn(async () => new Response('{"ok":1}', { status: 200 }));
     const c = new FlightAwareClient({ fetchImpl: fetchImpl as unknown as typeof fetch, cacheTtlMs: 0 });

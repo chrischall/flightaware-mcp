@@ -80,6 +80,28 @@ describe('flight tools', () => {
     await h.close();
   });
 
+  it.each([
+    ['fa_search_flights_advanced', { query: '{match ident UAL*}' }, '/flights/search/advanced?'],
+    ['fa_get_flight_track', { id: 'UAL1-1-airline-0' }, '/flights/UAL1-1-airline-0/track'],
+    ['fa_get_flight_position', { id: 'UAL1-1-airline-0' }, '/flights/UAL1-1-airline-0/position'],
+    ['fa_get_flight_route', { id: 'UAL1-1-airline-0' }, '/flights/UAL1-1-airline-0/route'],
+    ['fa_get_flight_history', { ident: 'UAL123' }, '/history/flights/UAL123'],
+  ])('%s hits the right path', async (tool, args, expected) => {
+    const get = vi.spyOn(client, 'get').mockResolvedValue({});
+    const h = await createTestHarness(registerFlightTools);
+    await h.callTool(tool, args);
+    expect(get.mock.calls[0][0]).toContain(expected);
+    await h.close();
+  });
+
+  it('fa_resolve_flight uses the static cache tier', async () => {
+    const get = vi.spyOn(client, 'get').mockResolvedValue({});
+    const h = await createTestHarness(registerFlightTools);
+    await h.callTool('fa_resolve_flight', { ident: 'UAL123' });
+    expect(get.mock.calls[0][1]).toEqual({ cache: 'static' });
+    await h.close();
+  });
+
   it('rejects an ident that could escape the URL path', async () => {
     const get = vi.spyOn(client, 'get').mockResolvedValue({});
     const h = await createTestHarness(registerFlightTools);
