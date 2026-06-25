@@ -23,6 +23,32 @@ describe('operator + aircraft tools', () => {
     await h.close();
   });
 
+  it('fa_get_operator fetches operator info (static tier)', async () => {
+    const get = vi.spyOn(client, 'get').mockResolvedValue({});
+    const h = await createTestHarness(registerOperatorTools);
+    await h.callTool('fa_get_operator', { id: 'UAL' });
+    expect(get.mock.calls[0][0]).toBe('/operators/UAL');
+    expect(get.mock.calls[0][1]).toEqual({ cache: 'static' });
+    await h.close();
+  });
+
+  it('fa_list_operators lists (static tier)', async () => {
+    const get = vi.spyOn(client, 'get').mockResolvedValue({ operators: [] });
+    const h = await createTestHarness(registerOperatorTools);
+    await h.callTool('fa_list_operators', {});
+    expect(get.mock.calls[0][0]).toMatch(/^\/operators(\?|$)/);
+    expect(get.mock.calls[0][1]).toEqual({ cache: 'static' });
+    await h.close();
+  });
+
+  it('fa_get_aircraft_owner uses the static tier', async () => {
+    const get = vi.spyOn(client, 'get').mockResolvedValue({});
+    const h = await createTestHarness(registerAircraftTools);
+    await h.callTool('fa_get_aircraft_owner', { ident: 'N1' });
+    expect(get.mock.calls[0][1]).toEqual({ cache: 'static' });
+    await h.close();
+  });
+
   it('fa_get_aircraft_owner hits /aircraft/{ident}/owner', async () => {
     const get = vi.spyOn(client, 'get').mockResolvedValue({});
     const h = await createTestHarness(registerAircraftTools);

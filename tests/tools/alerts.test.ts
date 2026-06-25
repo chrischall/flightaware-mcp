@@ -64,6 +64,52 @@ describe('alert tools — confirm gating', () => {
     await h.close();
   });
 
+  it('fa_get_alert reads a single alert by id', async () => {
+    const get = vi.spyOn(client, 'get').mockResolvedValue({});
+    const h = await createTestHarness(registerAlertTools);
+    await h.callTool('fa_get_alert', { id: 7 });
+    expect(get.mock.calls[0][0]).toBe('/alerts/7');
+    await h.close();
+  });
+
+  it('fa_update_alert previews without confirm and PUTs with confirm', async () => {
+    const write = vi.spyOn(client, 'write').mockResolvedValue({ status: 204, data: undefined });
+    const h = await createTestHarness(registerAlertTools);
+    const dry = parseToolResult<{ dryRun: boolean; method: string; path: string }>(
+      await h.callTool('fa_update_alert', { id: 7, arrival: true }),
+    );
+    expect(dry.dryRun).toBe(true);
+    expect(dry.method).toBe('PUT');
+    expect(dry.path).toBe('/alerts/7');
+    expect(write).not.toHaveBeenCalled();
+    const done = parseToolResult<{ updated: boolean; alert_id: number }>(
+      await h.callTool('fa_update_alert', { id: 7, arrival: true, confirm: true }),
+    );
+    expect(done.updated).toBe(true);
+    expect(done.alert_id).toBe(7);
+    expect(write).toHaveBeenCalledWith('PUT', '/alerts/7', expect.objectContaining({ events: { arrival: true } }));
+    await h.close();
+  });
+
+  it('fa_get_alerts_endpoint reads the delivery endpoint', async () => {
+    const get = vi.spyOn(client, 'get').mockResolvedValue({});
+    const h = await createTestHarness(registerAlertTools);
+    await h.callTool('fa_get_alerts_endpoint', {});
+    expect(get.mock.calls[0][0]).toBe('/alerts/endpoint');
+    await h.close();
+  });
+
+  it('fa_set_alerts_endpoint with confirm PUTs the endpoint', async () => {
+    const write = vi.spyOn(client, 'write').mockResolvedValue({ status: 200, data: { url: 'https://example.com/hook' } });
+    const h = await createTestHarness(registerAlertTools);
+    const done = parseToolResult<{ updated: boolean }>(
+      await h.callTool('fa_set_alerts_endpoint', { url: 'https://example.com/hook', confirm: true }),
+    );
+    expect(done.updated).toBe(true);
+    expect(write).toHaveBeenCalledWith('PUT', '/alerts/endpoint', { url: 'https://example.com/hook' });
+    await h.close();
+  });
+
   it('fa_list_alerts is a plain read', async () => {
     const get = vi.spyOn(client, 'get').mockResolvedValue({ alerts: [] });
     const h = await createTestHarness(registerAlertTools);

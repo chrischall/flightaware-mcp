@@ -91,6 +91,39 @@ describe('airport tools', () => {
     await h.close();
   });
 
+  it('fa_list_airports lists (static tier)', async () => {
+    const get = vi.spyOn(client, 'get').mockResolvedValue({ airports: [] });
+    const h = await createTestHarness(registerAirportTools);
+    await h.callTool('fa_list_airports', {});
+    expect(get.mock.calls[0][0]).toMatch(/^\/airports(\?|$)/);
+    expect(get.mock.calls[0][1]).toEqual({ cache: 'static' });
+    await h.close();
+  });
+
+  it('fa_get_airport_weather defaults to observations', async () => {
+    const get = vi.spyOn(client, 'get').mockResolvedValue({});
+    const h = await createTestHarness(registerAirportTools);
+    await h.callTool('fa_get_airport_weather', { id: 'KJFK' });
+    expect(get.mock.calls[0][0]).toContain('/airports/KJFK/weather/observations');
+    await h.close();
+  });
+
+  it('fa_get_airport_weather can request the forecast', async () => {
+    const get = vi.spyOn(client, 'get').mockResolvedValue({});
+    const h = await createTestHarness(registerAirportTools);
+    await h.callTool('fa_get_airport_weather', { id: 'KJFK', report: 'forecast' });
+    expect(get.mock.calls[0][0]).toContain('/airports/KJFK/weather/forecast');
+    await h.close();
+  });
+
+  it('fa_resolve_airport uses the static tier', async () => {
+    const get = vi.spyOn(client, 'get').mockResolvedValue({});
+    const h = await createTestHarness(registerAirportTools);
+    await h.callTool('fa_resolve_airport', { id: 'JFK' });
+    expect(get.mock.calls[0][1]).toEqual({ cache: 'static' });
+    await h.close();
+  });
+
   it('rejects a non-alphanumeric airport code', async () => {
     const get = vi.spyOn(client, 'get').mockResolvedValue({});
     const h = await createTestHarness(registerAirportTools);
