@@ -37,7 +37,8 @@
       "env": {
         "AEROAPI_API_KEY": "${user_config.aeroapi_api_key}",
         "AEROAPI_OUTPUT_DIR": "${user_config.aeroapi_output_dir}",
-        "AEROAPI_CACHE_TTL": "${user_config.aeroapi_cache_ttl}"
+        "AEROAPI_CACHE_TTL": "${user_config.aeroapi_cache_ttl}",
+        "AEROAPI_STATIC_CACHE_TTL": "${user_config.aeroapi_static_cache_ttl}"
       }
     }
   },
@@ -59,7 +60,14 @@
     "aeroapi_cache_ttl": {
       "type": "string",
       "title": "Read Cache TTL (seconds)",
-      "description": "Cache identical GET responses for this many seconds to cut per-query billing (default: 15; set 0 to disable)",
+      "description": "Cache identical live-data GET responses for this many seconds to cut per-query billing (default: 15; set 0 to disable)",
+      "required": false,
+      "sensitive": false
+    },
+    "aeroapi_static_cache_ttl": {
+      "type": "string",
+      "title": "Static Cache TTL (seconds)",
+      "description": "Longer cache TTL for reference data that rarely changes — airport/operator info, routes, ownership, canonical lookups (default: 3600; set 0 to disable)",
       "required": false,
       "sensitive": false
     }

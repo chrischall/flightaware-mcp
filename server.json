@@ -32,7 +32,14 @@
         },
         {
           "name": "AEROAPI_CACHE_TTL",
-          "description": "Seconds to cache identical GET responses (default 15; 0 disables)",
+          "description": "Seconds to cache identical live-data GET responses (default 15; 0 disables)",
+          "isRequired": false,
+          "format": "string",
+          "isSecret": false
+        },
+        {
+          "name": "AEROAPI_STATIC_CACHE_TTL",
+          "description": "Seconds to cache reference data — airports, operators, routes, ownership (default 3600; 0 disables)",
           "isRequired": false,
           "format": "string",
           "isSecret": false

@@ -17,7 +17,7 @@ export function registerOperatorTools(server: McpServer): void {
       },
     },
     async ({ id }) => {
-      const data = await client.get(`/operators/${id}`);
+      const data = await client.get(`/operators/${id}`, { cache: 'static' });
       return textResult(data);
     },
   );
@@ -48,7 +48,7 @@ export function registerOperatorTools(server: McpServer): void {
       inputSchema: { ...pageParams },
     },
     async ({ max_pages, cursor }) => {
-      const data = await client.get(`/operators${qs({ max_pages, cursor })}`);
+      const data = await client.get(`/operators${qs({ max_pages, cursor })}`, { cache: 'static' });
       return textResult(data);
     },
   );

@@ -203,7 +203,7 @@ export function registerFlightTools(server: McpServer): void {
       },
     },
     async ({ ident, ident_type }) => {
-      const data = await client.get(`/flights/${ident}/canonical${qs({ ident_type })}`);
+      const data = await client.get(`/flights/${ident}/canonical${qs({ ident_type })}`, { cache: 'static' });
       return textResult(data);
     },
   );

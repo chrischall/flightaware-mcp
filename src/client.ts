@@ -24,6 +24,11 @@ const REQUEST_TIMEOUT_MS = 30_000;
 // an agent re-reading the same board/flight, short enough that live positions
 // aren't dangerously stale. Override with AEROAPI_CACHE_TTL (seconds; 0 = off).
 const DEFAULT_CACHE_TTL_MS = 15_000;
+// Reference data (airport/operator metadata, popular routes, aircraft owner,
+// canonical id mappings) barely changes, so it gets a much longer default TTL —
+// 1 hour — keyed off the same cache. Override with AEROAPI_STATIC_CACHE_TTL
+// (seconds; 0 = off). Tools opt into this tier via get(path, { cache: 'static' }).
+const DEFAULT_STATIC_CACHE_TTL_MS = 3_600_000;
 // Bound the cache so a long-lived server doesn't grow unbounded across many
 // distinct paths; oldest entries are evicted first.
 const CACHE_MAX_ENTRIES = 256;
@@ -37,13 +42,13 @@ export interface WriteResult<T = unknown> {
   data?: T;
 }
 
-/** Resolve the read-cache TTL (ms) from AEROAPI_CACHE_TTL (seconds). A blank or
- * non-numeric value falls back to the default; a valid `0` disables caching. */
-function readCacheTtlMs(): number {
-  const raw = readEnvVar('AEROAPI_CACHE_TTL');
-  if (raw === undefined) return DEFAULT_CACHE_TTL_MS;
+/** Resolve a cache TTL (ms) from an env var holding seconds. A blank or
+ * non-numeric value falls back to `defaultMs`; a valid `0` disables caching. */
+function readCacheTtlMs(envVar: string, defaultMs: number): number {
+  const raw = readEnvVar(envVar);
+  if (raw === undefined) return defaultMs;
   const secs = Number(raw);
-  return Number.isFinite(secs) && secs >= 0 ? secs * 1000 : DEFAULT_CACHE_TTL_MS;
+  return Number.isFinite(secs) && secs >= 0 ? secs * 1000 : defaultMs;
 }
 
 export class FlightAwareClient {
@@ -52,6 +57,7 @@ export class FlightAwareClient {
   private readonly api: ApiClient;
   private readonly fetchImpl: typeof fetch;
   private readonly cacheTtlMs: number;
+  private readonly staticCacheTtlMs: number;
   private readonly now: () => number;
   private readonly cache = new Map<string, { expiresAt: number; value: unknown }>();
 
@@ -60,9 +66,10 @@ export class FlightAwareClient {
    * install-time tools/list probe) when AEROAPI_API_KEY isn't set yet. The
    * error is re-raised at request time via requireKey().
    */
-  constructor(opts: { fetchImpl?: typeof fetch; cacheTtlMs?: number; now?: () => number } = {}) {
+  constructor(opts: { fetchImpl?: typeof fetch; cacheTtlMs?: number; staticCacheTtlMs?: number; now?: () => number } = {}) {
     this.now = opts.now ?? Date.now;
-    this.cacheTtlMs = opts.cacheTtlMs ?? readCacheTtlMs();
+    this.cacheTtlMs = opts.cacheTtlMs ?? readCacheTtlMs('AEROAPI_CACHE_TTL', DEFAULT_CACHE_TTL_MS);
+    this.staticCacheTtlMs = opts.staticCacheTtlMs ?? readCacheTtlMs('AEROAPI_STATIC_CACHE_TTL', DEFAULT_STATIC_CACHE_TTL_MS);
     const key = readEnvVar('AEROAPI_API_KEY');
     if (!key) {
       this.apiKey = null;
@@ -109,16 +116,19 @@ export class FlightAwareClient {
 
   /**
    * GET a JSON resource. `path` must already include any query string. Results
-   * are served from a short-TTL in-memory cache (keyed by the full path) to cut
-   * repeated per-query billing; see DEFAULT_CACHE_TTL_MS / AEROAPI_CACHE_TTL.
+   * are served from an in-memory cache (keyed by the full path) to cut repeated
+   * per-query billing. `cache: 'static'` selects the longer reference-data TTL
+   * (AEROAPI_STATIC_CACHE_TTL) for metadata that barely changes; the default
+   * 'dynamic' tier (AEROAPI_CACHE_TTL) is for live data.
    */
-  async get<T = unknown>(path: string): Promise<T> {
-    if (this.cacheTtlMs > 0) {
+  async get<T = unknown>(path: string, opts: { cache?: 'dynamic' | 'static' } = {}): Promise<T> {
+    const ttl = opts.cache === 'static' ? this.staticCacheTtlMs : this.cacheTtlMs;
+    if (ttl > 0) {
       const hit = this.cache.get(path);
       if (hit && hit.expiresAt > this.now()) return hit.value as T;
     }
     const value = await this.api.fetchJson<T>('GET', path);
-    if (this.cacheTtlMs > 0) {
+    if (ttl > 0) {
       if (this.cache.size >= CACHE_MAX_ENTRIES) {
         // Evict expired entries first; if still full, drop the oldest (Map
         // preserves insertion order, so the first key is the oldest).
@@ -130,7 +140,7 @@ export class FlightAwareClient {
           this.cache.delete(oldest);
         }
       }
-      this.cache.set(path, { expiresAt: this.now() + this.cacheTtlMs, value });
+      this.cache.set(path, { expiresAt: this.now() + ttl, value });
     }
     return value;
   }

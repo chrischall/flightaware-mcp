@@ -59,9 +59,14 @@ Personal tier — they're grouped with the Standard/Premium-only data.
 **Still unexercised:** `fa_foresight_search` (premium add-on), and the
 tier-gated `/alerts*`, `fa_get_flight_history`, `fa_resolve_*` (Standard/Premium).
 
-**Response cache:** `client.get()` caches by full path for `AEROAPI_CACHE_TTL`
-seconds (default 15; `0` disables) to cut per-query billing — helpful given the
-rate-limit behavior above. Writes are never cached.
+**Response cache:** `client.get()` caches by full path to cut per-query billing
+(helpful given the rate-limit behavior above), with two TTL tiers: **dynamic**
+(`AEROAPI_CACHE_TTL`, default 15s) for live data, and **static**
+(`AEROAPI_STATIC_CACHE_TTL`, default 3600s) for reference data that barely
+changes — airport/operator info, `fa_list_*`, `fa_get_airport_routes`,
+`fa_get_aircraft_owner`, and the `fa_resolve_*` canonical tools (opted in via
+`get(path, { cache: 'static' })`). Both `0`-disable independently. Writes are
+never cached.
 
 ## Base + auth
 
