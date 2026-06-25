@@ -40,7 +40,8 @@ Alert mutations are **confirm-gated**: without `confirm: true` they return a dry
 | --- | --- | --- |
 | `AEROAPI_API_KEY` | yes | Your AeroAPI key (sent as the `x-apikey` header). |
 | `AEROAPI_OUTPUT_DIR` | no | Default directory for flight-map PNGs (default: cwd). |
-| `AEROAPI_CACHE_TTL` | no | Seconds to cache identical GET responses (default: 15; `0` disables). Cuts AeroAPI per-query billing. |
+| `AEROAPI_CACHE_TTL` | no | Seconds to cache identical **live-data** GET responses (default: 15; `0` disables). Cuts AeroAPI per-query billing. |
+| `AEROAPI_STATIC_CACHE_TTL` | no | Longer TTL for **reference data** — airport/operator info, routes, ownership, canonical lookups (default: 3600; `0` disables). |
 
 ## Development
 

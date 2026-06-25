@@ -14,7 +14,7 @@ export function registerAircraftTools(server: McpServer): void {
       },
     },
     async ({ ident }) => {
-      const data = await client.get(`/aircraft/${ident}/owner`);
+      const data = await client.get(`/aircraft/${ident}/owner`, { cache: 'static' });
       return textResult(data);
     },
   );

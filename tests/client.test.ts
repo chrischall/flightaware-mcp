@@ -76,6 +76,41 @@ describe('FlightAwareClient', () => {
     expect(fetchImpl).toHaveBeenCalledTimes(2);
   });
 
+  it('static-tier reads use the longer TTL and survive past the dynamic window', async () => {
+    let n = 0;
+    const fetchImpl = vi.fn(async () => new Response(JSON.stringify({ n: ++n }), { status: 200, headers: { 'content-type': 'application/json' } }));
+    let t = 1_000;
+    const c = new FlightAwareClient({
+      fetchImpl: fetchImpl as unknown as typeof fetch,
+      cacheTtlMs: 5_000,
+      staticCacheTtlMs: 100_000,
+      now: () => t,
+    });
+    await c.get('/airports/KJFK', { cache: 'static' });
+    t += 50_000; // well past the 5s dynamic TTL, well within the 100s static TTL
+    await c.get('/airports/KJFK', { cache: 'static' }); // still cached
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+    t += 60_000; // now past the static TTL too
+    await c.get('/airports/KJFK', { cache: 'static' }); // refetch
+    expect(fetchImpl).toHaveBeenCalledTimes(2);
+  });
+
+  it('a dynamic read of the same path still expires at the short TTL', async () => {
+    let n = 0;
+    const fetchImpl = vi.fn(async () => new Response(JSON.stringify({ n: ++n }), { status: 200, headers: { 'content-type': 'application/json' } }));
+    let t = 1_000;
+    const c = new FlightAwareClient({
+      fetchImpl: fetchImpl as unknown as typeof fetch,
+      cacheTtlMs: 5_000,
+      staticCacheTtlMs: 100_000,
+      now: () => t,
+    });
+    await c.get('/flights/UAL123'); // default = dynamic
+    t += 6_000; // past dynamic TTL
+    await c.get('/flights/UAL123');
+    expect(fetchImpl).toHaveBeenCalledTimes(2);
+  });
+
   it('keys the cache by path (different paths are not conflated)', async () => {
     const fetchImpl = vi.fn(async () => new Response('{"ok":1}', { status: 200 }));
     const c = new FlightAwareClient({ fetchImpl: fetchImpl as unknown as typeof fetch, cacheTtlMs: 5_000, now: () => 1 });

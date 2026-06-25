@@ -21,15 +21,20 @@ and an empty body on delete (neither fits a JSON-only client). No fetchproxy.
 ## Environment
 
 ```
-AEROAPI_API_KEY=<key>     # Required. Create at https://www.flightaware.com/aeroapi/portal/
-AEROAPI_OUTPUT_DIR=<dir>  # Optional. Where flight-map PNGs are written (default: cwd)
-AEROAPI_CACHE_TTL=<secs>  # Optional. Read-cache TTL in seconds (default 15; 0 disables)
+AEROAPI_API_KEY=<key>            # Required. Create at https://www.flightaware.com/aeroapi/portal/
+AEROAPI_OUTPUT_DIR=<dir>         # Optional. Where flight-map PNGs are written (default: cwd)
+AEROAPI_CACHE_TTL=<secs>        # Optional. Live-data read-cache TTL (default 15; 0 disables)
+AEROAPI_STATIC_CACHE_TTL=<secs> # Optional. Reference-data read-cache TTL (default 3600; 0 disables)
 ```
 
-`client.get()` is backed by a short-TTL in-memory cache keyed by full path
-(`AEROAPI_CACHE_TTL`, default 15s) to cut AeroAPI's per-query billing; writes
-are never cached. Tier note: alerts, `fa_get_flight_history`, and the
-`fa_resolve_*` canonical tools require a Standard/Premium tier (Personal 401s).
+`client.get(path, { cache })` is backed by an in-memory cache keyed by full
+path, with two TTL tiers to cut AeroAPI's per-query billing: **dynamic**
+(`AEROAPI_CACHE_TTL`, default 15s) for live data, and **static**
+(`AEROAPI_STATIC_CACHE_TTL`, default 3600s) for reference data that barely
+changes — opted in per tool via `get(path, { cache: 'static' })` (airport/
+operator info, `fa_list_*`, routes, aircraft owner, `fa_resolve_*`). Writes are
+never cached. Tier note: alerts, `fa_get_flight_history`, and the `fa_resolve_*`
+canonical tools require a Standard/Premium tier (Personal 401s).
 
 Loaded via `loadDotenvSafely` from `.env` next to `dist/` (failure swallowed —
 the .mcpb bundle has no dotenv). The config error is **deferred**: the server

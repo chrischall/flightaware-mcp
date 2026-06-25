@@ -18,7 +18,7 @@ export function registerAirportTools(server: McpServer): void {
       },
     },
     async ({ id }) => {
-      const data = await client.get(`/airports/${id}`);
+      const data = await client.get(`/airports/${id}`, { cache: 'static' });
       return textResult(data);
     },
   );
@@ -52,7 +52,7 @@ export function registerAirportTools(server: McpServer): void {
       inputSchema: { ...pageParams },
     },
     async ({ max_pages, cursor }) => {
-      const data = await client.get(`/airports${qs({ max_pages, cursor })}`);
+      const data = await client.get(`/airports${qs({ max_pages, cursor })}`, { cache: 'static' });
       return textResult(data);
     },
   );
@@ -138,7 +138,7 @@ export function registerAirportTools(server: McpServer): void {
       },
     },
     async ({ id, destination, max_pages, cursor }) => {
-      const data = await client.get(`/airports/${id}/routes/${destination}${qs({ max_pages, cursor })}`);
+      const data = await client.get(`/airports/${id}/routes/${destination}${qs({ max_pages, cursor })}`, { cache: 'static' });
       return textResult(data);
     },
   );
@@ -155,7 +155,7 @@ export function registerAirportTools(server: McpServer): void {
       },
     },
     async ({ id, id_type }) => {
-      const data = await client.get(`/airports/${id}/canonical${qs({ id_type })}`);
+      const data = await client.get(`/airports/${id}/canonical${qs({ id_type })}`, { cache: 'static' });
       return textResult(data);
     },
   );

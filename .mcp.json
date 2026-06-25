@@ -6,7 +6,8 @@
       "env": {
         "AEROAPI_API_KEY": "${AEROAPI_API_KEY}",
         "AEROAPI_OUTPUT_DIR": "${AEROAPI_OUTPUT_DIR}",
-        "AEROAPI_CACHE_TTL": "${AEROAPI_CACHE_TTL}"
+        "AEROAPI_CACHE_TTL": "${AEROAPI_CACHE_TTL}",
+        "AEROAPI_STATIC_CACHE_TTL": "${AEROAPI_STATIC_CACHE_TTL}"
       }
     }
   }

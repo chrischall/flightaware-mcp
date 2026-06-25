@@ -48,6 +48,23 @@ describe('airport tools', () => {
     await h.close();
   });
 
+  it('fa_get_airport uses the static cache tier', async () => {
+    const get = vi.spyOn(client, 'get').mockResolvedValue({});
+    const h = await createTestHarness(registerAirportTools);
+    await h.callTool('fa_get_airport', { id: 'KJFK' });
+    expect(get).toHaveBeenCalledWith('/airports/KJFK', { cache: 'static' });
+    await h.close();
+  });
+
+  it('a live board uses the default (dynamic) tier — no static opt', async () => {
+    const get = vi.spyOn(client, 'get').mockResolvedValue({});
+    const h = await createTestHarness(registerAirportTools);
+    await h.callTool('fa_get_airport_flights', { id: 'KJFK' });
+    // second arg omitted (or not static) → dynamic TTL
+    expect(get.mock.calls[0][1]).toBeUndefined();
+    await h.close();
+  });
+
   it('fa_get_airport_flight_counts hits /airports/{id}/flights/counts', async () => {
     const get = vi.spyOn(client, 'get').mockResolvedValue({ departed: 1 });
     const h = await createTestHarness(registerAirportTools);
