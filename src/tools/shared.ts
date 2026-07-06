@@ -32,7 +32,13 @@ export const AlertId = z.number().int().positive();
 
 /** Pagination knobs shared by every paged AeroAPI collection. */
 export const pageParams = {
-  max_pages: z.number().int().min(1).optional().describe('Max pages to fetch (AeroAPI default: 1)'),
+  max_pages: z
+    .number()
+    .int()
+    .min(1)
+    .max(20)
+    .optional()
+    .describe('Max pages to fetch, 1-20 (AeroAPI default: 1). Capped at 20 since AeroAPI bills per page.'),
   cursor: z.string().optional().describe('Opaque paging cursor from a previous response\'s links.next'),
 };
 
