@@ -1,5 +1,24 @@
 # Changelog
 
+## [0.3.1](https://github.com/chrischall/flightaware-mcp/compare/v0.3.0...v0.3.1) (2026-07-07)
+
+
+### Bug Fixes
+
+* bump @chrischall/mcp-utils to 0.12.0 ([#20](https://github.com/chrischall/flightaware-mcp/issues/20)) ([4ac6675](https://github.com/chrischall/flightaware-mcp/commit/4ac66753fcc81e79ea073e26ce20fde6ef6e7b34))
+* cap max_pages to bound AeroAPI billing ([#13](https://github.com/chrischall/flightaware-mcp/issues/13)) ([c5c1dd9](https://github.com/chrischall/flightaware-mcp/commit/c5c1dd99ef063152f4fc24db3fea547ca513cb25))
+
+
+### Refactor
+
+* adopt mcp-utils createResponseCache + readTtlMsEnv ([#17](https://github.com/chrischall/flightaware-mcp/issues/17)) ([36ce24c](https://github.com/chrischall/flightaware-mcp/commit/36ce24cd11f016071b0db37c533c3d48d64125dc))
+
+
+### Documentation
+
+* document first-party dependency-bump label exception ([#21](https://github.com/chrischall/flightaware-mcp/issues/21)) ([1aca6ae](https://github.com/chrischall/flightaware-mcp/commit/1aca6aee69db1fe81d1a9f08c9e93e005091d1e7))
+* fix stale CACHE_MAX_ENTRIES comment in cache eviction test ([#19](https://github.com/chrischall/flightaware-mcp/issues/19)) ([ac5f7b3](https://github.com/chrischall/flightaware-mcp/commit/ac5f7b389734fd08bc19f7dc93fe2fd6e6573fb6))
+
 ## [0.3.0](https://github.com/chrischall/flightaware-mcp/compare/v0.2.0...v0.3.0) (2026-06-25)
 
 
