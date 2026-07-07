@@ -3,10 +3,13 @@ import { fileURLToPath } from 'node:url';
 import {
   loadDotenvSafely,
   readEnvVar,
+  readTtlMsEnv,
   createApiClient,
+  createResponseCache,
   formatApiError,
   McpToolError,
   type ApiClient,
+  type ResponseCache,
 } from '@chrischall/mcp-utils';
 
 // Load .env for local dev; silently skip if dotenv is unavailable (e.g. the
@@ -29,9 +32,6 @@ const DEFAULT_CACHE_TTL_MS = 15_000;
 // 1 hour — keyed off the same cache. Override with AEROAPI_STATIC_CACHE_TTL
 // (seconds; 0 = off). Tools opt into this tier via get(path, { cache: 'static' }).
 const DEFAULT_STATIC_CACHE_TTL_MS = 3_600_000;
-// Bound the cache so a long-lived server doesn't grow unbounded across many
-// distinct paths; oldest entries are evicted first.
-const CACHE_MAX_ENTRIES = 256;
 
 /** Result of a mutating call: parsed body (if any) plus the new-resource id
  * AeroAPI returns in the `Location` header on create. */
@@ -42,24 +42,12 @@ export interface WriteResult<T = unknown> {
   data?: T;
 }
 
-/** Resolve a cache TTL (ms) from an env var holding seconds. A blank or
- * non-numeric value falls back to `defaultMs`; a valid `0` disables caching. */
-function readCacheTtlMs(envVar: string, defaultMs: number): number {
-  const raw = readEnvVar(envVar);
-  if (raw === undefined) return defaultMs;
-  const secs = Number(raw);
-  return Number.isFinite(secs) && secs >= 0 ? secs * 1000 : defaultMs;
-}
-
 export class FlightAwareClient {
   private readonly apiKey: string | null;
   private readonly configError: Error | null;
   private readonly api: ApiClient;
   private readonly fetchImpl: typeof fetch;
-  private readonly cacheTtlMs: number;
-  private readonly staticCacheTtlMs: number;
-  private readonly now: () => number;
-  private readonly cache = new Map<string, { expiresAt: number; value: unknown }>();
+  private readonly cache: ResponseCache;
 
   /**
    * Defer the config error so the server still boots (and answers the host's
@@ -67,9 +55,10 @@ export class FlightAwareClient {
    * error is re-raised at request time via requireKey().
    */
   constructor(opts: { fetchImpl?: typeof fetch; cacheTtlMs?: number; staticCacheTtlMs?: number; now?: () => number } = {}) {
-    this.now = opts.now ?? Date.now;
-    this.cacheTtlMs = opts.cacheTtlMs ?? readCacheTtlMs('AEROAPI_CACHE_TTL', DEFAULT_CACHE_TTL_MS);
-    this.staticCacheTtlMs = opts.staticCacheTtlMs ?? readCacheTtlMs('AEROAPI_STATIC_CACHE_TTL', DEFAULT_STATIC_CACHE_TTL_MS);
+    const now = opts.now ?? Date.now;
+    const cacheTtlMs = opts.cacheTtlMs ?? readTtlMsEnv('AEROAPI_CACHE_TTL', DEFAULT_CACHE_TTL_MS);
+    const staticCacheTtlMs = opts.staticCacheTtlMs ?? readTtlMsEnv('AEROAPI_STATIC_CACHE_TTL', DEFAULT_STATIC_CACHE_TTL_MS);
+    this.cache = createResponseCache({ ttlMs: { dynamic: cacheTtlMs, static: staticCacheTtlMs }, now });
     const key = readEnvVar('AEROAPI_API_KEY');
     if (!key) {
       this.apiKey = null;
@@ -122,27 +111,8 @@ export class FlightAwareClient {
    * 'dynamic' tier (AEROAPI_CACHE_TTL) is for live data.
    */
   async get<T = unknown>(path: string, opts: { cache?: 'dynamic' | 'static' } = {}): Promise<T> {
-    const ttl = opts.cache === 'static' ? this.staticCacheTtlMs : this.cacheTtlMs;
-    if (ttl > 0) {
-      const hit = this.cache.get(path);
-      if (hit && hit.expiresAt > this.now()) return hit.value as T;
-    }
-    const value = await this.api.fetchJson<T>('GET', path);
-    if (ttl > 0) {
-      if (this.cache.size >= CACHE_MAX_ENTRIES) {
-        // Evict expired entries first; if still full, drop the oldest (Map
-        // preserves insertion order, so the first key is the oldest).
-        const t = this.now();
-        for (const [k, v] of this.cache) if (v.expiresAt <= t) this.cache.delete(k);
-        while (this.cache.size >= CACHE_MAX_ENTRIES) {
-          const oldest = this.cache.keys().next().value;
-          if (oldest === undefined) break;
-          this.cache.delete(oldest);
-        }
-      }
-      this.cache.set(path, { expiresAt: this.now() + ttl, value });
-    }
-    return value;
+    const tier = opts.cache === 'static' ? 'static' : 'dynamic';
+    return this.cache.fetchThrough(path, () => this.api.fetchJson<T>('GET', path), tier) as Promise<T>;
   }
 
   /**
