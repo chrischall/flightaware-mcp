@@ -62,3 +62,9 @@ so the host's install-time `tools/list` probe still succeeds.
   documented v4 surface and marked **[verify-pending]** in `docs/FLIGHTAWARE-API.md`
   — re-verify against a real 200 (free Personal key) before treating as confirmed.
 - TDD; mock the network in tests. Don't hand-bump the version (release-please).
+
+## Pull requests & release notes
+
+Apply exactly one release-notes label per PR (`enhancement` → Features, `bug` → Bug Fixes, `dependencies` → Dependencies, etc.), and give the PR a Conventional-Commit title — release-please parses the squash subject to pick the version bump and changelog section.
+
+**Exception for first-party dependency bumps.** When bumping a package we own (`@chrischall/mcp-utils`, `@chrischall/realty-core`, `@fetchproxy/server` — anything published from a chrischall-owned repo), label the PR `enhancement` or `bug` instead of `dependencies`, and use the matching Conventional-Commit prefix (`feat:` or `fix:`) instead of `chore:`/`build(deps):`. Those bumps deliver real product fixes or features through us, so they should drive a release-please version bump and show up under Features/Bug Fixes in the release notes — not get hidden under "Dependencies" (which doesn't trigger a release).
