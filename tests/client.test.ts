@@ -123,8 +123,10 @@ describe('FlightAwareClient', () => {
     const fetchImpl = vi.fn(async () => new Response('{"ok":1}', { status: 200 }));
     let t = 1_000;
     const c = new FlightAwareClient({ fetchImpl: fetchImpl as unknown as typeof fetch, cacheTtlMs: 1_000, now: () => t });
-    // Fill well past the 256-entry cap with fresh entries → exercises the
-    // oldest-drop while-loop.
+    // Fill well past the entry cap with fresh entries → exercises the
+    // oldest-drop eviction. The cap now lives inside @chrischall/mcp-utils'
+    // createResponseCache (RESPONSE_CACHE_MAX_ENTRIES, default 256), which
+    // evicts expired entries first and then the oldest by insertion order.
     for (let i = 0; i < 300; i++) await c.get(`/p/${i}`);
     expect(fetchImpl).toHaveBeenCalledTimes(300);
     // Jump past the TTL so everything is expired, then add one more → exercises
