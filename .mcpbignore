@@ -39,7 +39,6 @@ server.json
 plugin.json
 .claude-plugin/
 .mcp.json
-SKILL.md
 skills/
 
 # Repo-local maintenance scripts
