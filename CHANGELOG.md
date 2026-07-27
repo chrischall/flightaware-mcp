@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.3](https://github.com/chrischall/flightaware-mcp/compare/v0.3.2...v0.3.3) (2026-07-25)
+
+
+### Bug Fixes
+
+* **deps:** bump fast-uri out of the host-confusion advisories ([#33](https://github.com/chrischall/flightaware-mcp/issues/33)) ([a274cfa](https://github.com/chrischall/flightaware-mcp/commit/a274cfa6c0aff4f08ca3568628749083826f9be5))
+
 ## [0.3.2](https://github.com/chrischall/flightaware-mcp/compare/v0.3.1...v0.3.2) (2026-07-14)
 
 
