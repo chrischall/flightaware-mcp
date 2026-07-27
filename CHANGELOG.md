@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.4](https://github.com/chrischall/flightaware-mcp/compare/v0.3.3...v0.3.4) (2026-07-27)
+
+
+### Bug Fixes
+
+* **release:** restore the skill-path pin dropped by the pipeline sweep ([#36](https://github.com/chrischall/flightaware-mcp/issues/36)) ([c150e2a](https://github.com/chrischall/flightaware-mcp/commit/c150e2a28730f67d772dbd44adf3c6dde7243197))
+
 ## [0.3.3](https://github.com/chrischall/flightaware-mcp/compare/v0.3.2...v0.3.3) (2026-07-25)
 
 
