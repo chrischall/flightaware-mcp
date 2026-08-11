@@ -55,7 +55,6 @@ jobs:
         with:
           version: ${{ needs.release-please.outputs.version }}
           tag-name: ${{ needs.release-please.outputs.tag_name }}
-          # SKILL.md lives in the plugin skills/ layout, not the repo root
           skill-path: skills/flightaware-mcp/SKILL.md
           clawhub-token: ${{ secrets.CLAWHUB_TOKEN }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
