@@ -1,0 +1,31 @@
+version: 1
+name: FlightAware
+slug: flightaware
+summary: >-
+  Live flight tracking and aviation data via FlightAware AeroAPI — flights,
+  airports, operators, schedules, and alerts
+env:
+  - name: AEROAPI_API_KEY
+    secret: true
+    required: true
+    help: >-
+      Your FlightAware AeroAPI key (flightaware.com/aeroapi/portal)
+  - name: AEROAPI_OUTPUT_DIR
+    required: false
+    help: >-
+      Default directory for flight-map PNGs (default: current working directory)
+  - name: AEROAPI_CACHE_TTL
+    required: false
+    help: >-
+      Seconds to cache identical live-data GET responses (default 15; 0
+      disables)
+  - name: AEROAPI_STATIC_CACHE_TTL
+    required: false
+    help: >-
+      Seconds to cache reference data — airports, operators, routes, ownership
+      (default 3600; 0 disables)
+egress:
+  allow:
+    # Only hosts the SERVER process actually fetches.
+    - aeroapi.flightaware.com
+    - www.flightaware.com
