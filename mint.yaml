@@ -9,7 +9,7 @@ env:
     secret: true
     required: true
     help: >-
-      Your FlightAware AeroAPI key (flightaware.com/aeroapi/portal)
+      Your FlightAware AeroAPI key (https://www.flightaware.com/aeroapi/portal/)
   - name: AEROAPI_OUTPUT_DIR
     required: false
     help: >-
