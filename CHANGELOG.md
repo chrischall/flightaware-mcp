@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.5](https://github.com/chrischall/flightaware-mcp/compare/v0.3.4...v0.3.5) (2026-08-26)
+
+
+### Bug Fixes
+
+* use the full AeroAPI portal URL in the mint.yaml help text ([#55](https://github.com/chrischall/flightaware-mcp/issues/55)) ([57e980d](https://github.com/chrischall/flightaware-mcp/commit/57e980d310289c6b9636dd5e4b407a0655e77c2e)), closes [#54](https://github.com/chrischall/flightaware-mcp/issues/54)
+
 ## [0.3.4](https://github.com/chrischall/flightaware-mcp/compare/v0.3.3...v0.3.4) (2026-07-27)
 
 
