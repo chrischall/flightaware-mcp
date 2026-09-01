@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.4.0](https://github.com/chrischall/flightaware-mcp/compare/v0.3.5...v0.4.0) (2026-09-01)
+
+
+### Features
+
+* **health:** add fa_healthcheck ([#69](https://github.com/chrischall/flightaware-mcp/issues/69)) ([07e2df3](https://github.com/chrischall/flightaware-mcp/commit/07e2df3cbbc5d8fc8de4a941443294e66090a708))
+
+
+### Documentation
+
+* **health:** add fa_healthcheck to the README tools table ([#74](https://github.com/chrischall/flightaware-mcp/issues/74)) ([4af4a72](https://github.com/chrischall/flightaware-mcp/commit/4af4a72af6853b061281f0061651c7d50155c09a)), closes [#73](https://github.com/chrischall/flightaware-mcp/issues/73)
+* **health:** list fa_healthcheck in manifest.json and the tool docs ([#72](https://github.com/chrischall/flightaware-mcp/issues/72)) ([b9410be](https://github.com/chrischall/flightaware-mcp/commit/b9410beff8aa74afb83d234e2c499bec36f0fe26))
+
 ## [0.3.5](https://github.com/chrischall/flightaware-mcp/compare/v0.3.4...v0.3.5) (2026-08-26)
 
 
