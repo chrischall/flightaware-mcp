@@ -4,6 +4,7 @@ import { VERSION } from './version.js';
 import { registerFlightTools } from './tools/flights.js';
 import { registerAirportTools } from './tools/airports.js';
 import { registerOperatorTools } from './tools/operators.js';
+import { registerHealthcheckTools } from './tools/health.js';
 import { registerAircraftTools } from './tools/aircraft.js';
 import { registerScheduleTools } from './tools/schedules.js';
 import { registerAlertTools } from './tools/alerts.js';
@@ -20,6 +21,7 @@ await runMcp({
     registerFlightTools,
     registerAirportTools,
     registerOperatorTools,
+    registerHealthcheckTools,
     registerAircraftTools,
     registerScheduleTools,
     registerAlertTools,
