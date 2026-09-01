@@ -1,22 +1,23 @@
 import { describe, it, expect, vi } from 'vitest';
-import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { createTestHarness, parseToolResult } from '@chrischall/mcp-utils/test';
 import { registerHealthcheckTools } from '../src/tools/health.js';
 import type { FlightAwareClient } from '../src/client.js';
 
 function setup(env: Record<string, string | undefined>, probe?: () => Promise<unknown>) {
   const get = vi.fn(probe ?? (async () => ({ code: 'KJFK' })));
-  const server = new McpServer({ name: 'test', version: '0.0.0' });
-  registerHealthcheckTools(server, { get } as unknown as FlightAwareClient, (k: string) => env[k]);
-  const call = async () =>
-    JSON.parse((await (server as any)._registeredTools.fa_healthcheck.handler({}, {})).content[0].text);
-  return { server, call, get };
+  const harness = createTestHarness((s) =>
+    registerHealthcheckTools(s, { get } as unknown as FlightAwareClient, (k: string) => env[k]),
+  );
+  const call = async () => parseToolResult<any>(await (await harness).callTool('fa_healthcheck'));
+  const names = async () => (await (await harness).listTools()).map((t) => t.name);
+  return { call, get, names };
 }
 
 const FULL = { AEROAPI_API_KEY: 'KEY' };
 
 describe('fa_healthcheck', () => {
-  it('registers under the repo tool prefix', () => {
-    expect(Object.keys((setup(FULL).server as any)._registeredTools)).toEqual(['fa_healthcheck']);
+  it('registers under the repo tool prefix', async () => {
+    expect(await setup(FULL).names()).toEqual(['fa_healthcheck']);
   });
 
   it('reports ok when the key resolves and the probe succeeds', async () => {
@@ -74,13 +75,31 @@ describe('fa_healthcheck', () => {
     expect(out.error.kind).toBe('rate_limited');
   });
 
+  // The regression the auto-review caught: index.ts registers tool modules as
+  // (server) => void and passes no client, so a REQUIRED client parameter is
+  // undefined in production while injected-mock tests still pass.
+  it('registers and runs with no client argument, as index.ts calls it', async () => {
+    const h = await createTestHarness((s) =>
+      (registerHealthcheckTools as unknown as (srv: typeof s) => void)(s),
+    );
+    const out = parseToolResult<any>(await h.callTool('fa_healthcheck'));
+    // Without AEROAPI_API_KEY the probe is skipped, so this exercises exactly
+    // the wiring — no network, and crucially no "client is undefined" throw.
+    expect(out).toHaveProperty('ok');
+    expect(out).toHaveProperty('credential');
+    // Structural guard: only `server` may be REQUIRED. A required client
+    // parameter makes arity 2, which is precisely the production bug — and
+    // the assertion above cannot catch it on its own, because with no API key
+    // the probe is skipped and the undefined client is never dereferenced.
+    expect(registerHealthcheckTools.length).toBe(1);
+  });
+
   it('reads the real environment when no reader is injected', async () => {
     vi.stubEnv('AEROAPI_API_KEY', 'REAL-KEY');
-    const server = new McpServer({ name: 'test', version: '0.0.0' });
-    registerHealthcheckTools(server, { get: vi.fn(async () => ({})) } as any);
-    const out = JSON.parse(
-      (await (server as any)._registeredTools.fa_healthcheck.handler({}, {})).content[0].text,
+    const h = await createTestHarness((s) =>
+      registerHealthcheckTools(s, { get: vi.fn(async () => ({})) } as any),
     );
+    const out = parseToolResult<any>(await h.callTool('fa_healthcheck'));
     expect(out.credential.resolved).toBe(true);
     expect(JSON.stringify(out)).not.toContain('REAL-KEY');
     vi.unstubAllEnvs();

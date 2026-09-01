@@ -6,6 +6,7 @@ import { registerOperatorTools } from '../src/tools/operators.js';
 import { registerAircraftTools } from '../src/tools/aircraft.js';
 import { registerScheduleTools } from '../src/tools/schedules.js';
 import { registerAlertTools } from '../src/tools/alerts.js';
+import { registerHealthcheckTools } from '../src/tools/health.js';
 
 describe('tool roster', () => {
   it('registers exactly the expected tools', async () => {
@@ -16,6 +17,7 @@ describe('tool roster', () => {
       registerAircraftTools(s);
       registerScheduleTools(s);
       registerAlertTools(s);
+      registerHealthcheckTools(s);
     });
     const names = (await h.listTools()).map((t) => t.name).sort();
     expect(names).toEqual([
@@ -42,6 +44,7 @@ describe('tool roster', () => {
       'fa_get_operator',
       'fa_get_operator_flights',
       'fa_get_scheduled_flights',
+      'fa_healthcheck',
       'fa_list_airports',
       'fa_list_alerts',
       'fa_list_operators',

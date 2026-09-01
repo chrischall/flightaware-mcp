@@ -1,7 +1,7 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { readEnvVar } from '@chrischall/mcp-utils';
 import { registerCredentialHealthcheckTool } from '@chrischall/mcp-utils/healthcheck';
-import type { FlightAwareClient } from '../client.js';
+import { client as defaultClient, type FlightAwareClient } from '../client.js';
 
 /**
  * `fa_healthcheck` — the one call that answers "is this connector working?",
@@ -47,7 +47,13 @@ export function classifyFlightAwareError(err: unknown): { kind: string; hint?: s
 
 export function registerHealthcheckTools(
   server: McpServer,
-  client: FlightAwareClient,
+  /**
+   * Defaults to the module singleton every other tool module imports.
+   * index.ts registers tool modules as `(server) => void` and passes no
+   * client, so a required parameter here is `undefined` in production while
+   * tests that inject a mock still pass.
+   */
+  client: Pick<FlightAwareClient, 'get'> = defaultClient,
   /** Seam: injectable so tests need no process env. */
   readEnv: ReadEnv = (k) => readEnvVar(k),
 ): void {
