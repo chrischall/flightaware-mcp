@@ -31,6 +31,7 @@ Get a key at [flightaware.com/aeroapi/portal](https://www.flightaware.com/aeroap
 | Operators / aircraft | `fa_get_operator`, `fa_get_operator_flights`, `fa_list_operators`, `fa_get_aircraft_owner` |
 | Schedules / predictive | `fa_get_scheduled_flights`, `fa_foresight_search` (premium tier) |
 | Alerts | `fa_list_alerts`, `fa_get_alert`, `fa_create_alert`, `fa_update_alert`, `fa_delete_alert`, `fa_get_alerts_endpoint`, `fa_set_alerts_endpoint` |
+| Health | `fa_healthcheck` — is this connector working? Reports whether AEROAPI_API_KEY resolved, whether AeroAPI accepted it, and what to fix. Uses a static-cached lookup, so repeat checks are not re-billed. |
 
 Alert mutations are **confirm-gated**: without `confirm: true` they return a dry-run preview and make no network call.
 
