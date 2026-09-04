@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { textResult, schemaConfirm } from '@chrischall/mcp-utils';
+import { minifiedResult, schemaConfirm } from '@chrischall/mcp-utils';
+import { viewArg, viewResponse } from '../view.js';
 import { client } from '../client.js';
 import { AirportCode, AlertId, FlightIdent, pageParams, qs } from './shared.js';
 
@@ -46,11 +47,12 @@ export function registerAlertTools(server: McpServer): void {
     {
       description: 'List the flight alerts configured on your AeroAPI account.' + TIER,
       annotations: { readOnlyHint: true, openWorldHint: true },
-      inputSchema: { ...pageParams },
+      inputSchema: {
+        view: viewArg(), ...pageParams },
     },
-    async ({ max_pages, cursor }) => {
+    async ({ max_pages, cursor, view }) => {
       const data = await client.get(`/alerts${qs({ max_pages, cursor })}`);
-      return textResult(data);
+      return viewResponse(view, data);
     },
   );
 
@@ -59,11 +61,12 @@ export function registerAlertTools(server: McpServer): void {
     {
       description: 'Get a single configured flight alert by its id.' + TIER,
       annotations: { readOnlyHint: true, openWorldHint: true },
-      inputSchema: { id: AlertId.describe('Alert id') },
+      inputSchema: {
+        view: viewArg(), id: AlertId.describe('Alert id') },
     },
-    async ({ id }) => {
+    async ({ id, view }) => {
       const data = await client.get(`/alerts/${id}`);
-      return textResult(data);
+      return viewResponse(view, data);
     },
   );
 
@@ -78,10 +81,10 @@ export function registerAlertTools(server: McpServer): void {
     async ({ confirm, ...args }) => {
       const body = buildAlertBody(args as Record<string, unknown>);
       if (confirm !== true) {
-        return textResult({ dryRun: true, method: 'POST', path: '/alerts', body, note: 'Dry run — re-run with confirm:true to create this alert.' });
+        return minifiedResult({ dryRun: true, method: 'POST', path: '/alerts', body, note: 'Dry run — re-run with confirm:true to create this alert.' });
       }
       const res = await client.write('POST', '/alerts', body);
-      return textResult({ created: true, alert_id: res.locationId, status: res.status, alert: res.data });
+      return minifiedResult({ created: true, alert_id: res.locationId, status: res.status, alert: res.data });
     },
   );
 
@@ -97,10 +100,10 @@ export function registerAlertTools(server: McpServer): void {
       const body = buildAlertBody(args as Record<string, unknown>);
       const path = `/alerts/${id}`;
       if (confirm !== true) {
-        return textResult({ dryRun: true, method: 'PUT', path, body, note: 'Dry run — re-run with confirm:true to update this alert.' });
+        return minifiedResult({ dryRun: true, method: 'PUT', path, body, note: 'Dry run — re-run with confirm:true to update this alert.' });
       }
       const res = await client.write('PUT', path, body);
-      return textResult({ updated: true, alert_id: id, status: res.status, alert: res.data });
+      return minifiedResult({ updated: true, alert_id: id, status: res.status, alert: res.data });
     },
   );
 
@@ -115,10 +118,10 @@ export function registerAlertTools(server: McpServer): void {
     async ({ id, confirm }) => {
       const path = `/alerts/${id}`;
       if (confirm !== true) {
-        return textResult({ dryRun: true, method: 'DELETE', path, note: 'Dry run — re-run with confirm:true to delete this alert.' });
+        return minifiedResult({ dryRun: true, method: 'DELETE', path, note: 'Dry run — re-run with confirm:true to delete this alert.' });
       }
       const res = await client.write('DELETE', path);
-      return textResult({ deleted: true, alert_id: id, status: res.status });
+      return minifiedResult({ deleted: true, alert_id: id, status: res.status });
     },
   );
 
@@ -127,11 +130,12 @@ export function registerAlertTools(server: McpServer): void {
     {
       description: 'Get the current delivery (webhook) endpoint configured for your AeroAPI alerts.' + TIER,
       annotations: { readOnlyHint: true, openWorldHint: true },
-      inputSchema: {},
+      inputSchema: {
+        view: viewArg(),},
     },
-    async () => {
+    async ({ view }) => {
       const data = await client.get('/alerts/endpoint');
-      return textResult(data);
+      return viewResponse(view, data);
     },
   );
 
@@ -151,10 +155,10 @@ export function registerAlertTools(server: McpServer): void {
       const body: Record<string, unknown> = { url };
       if (format) body.format = format;
       if (confirm !== true) {
-        return textResult({ dryRun: true, method: 'PUT', path: '/alerts/endpoint', body, note: 'Dry run — re-run with confirm:true to set the delivery endpoint.' });
+        return minifiedResult({ dryRun: true, method: 'PUT', path: '/alerts/endpoint', body, note: 'Dry run — re-run with confirm:true to set the delivery endpoint.' });
       }
       const res = await client.write('PUT', '/alerts/endpoint', body);
-      return textResult({ updated: true, status: res.status, endpoint: res.data });
+      return minifiedResult({ updated: true, status: res.status, endpoint: res.data });
     },
   );
 }

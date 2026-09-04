@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { textResult, McpToolError } from '@chrischall/mcp-utils';
+import { McpToolError, minifiedResult } from '@chrischall/mcp-utils';
+import { viewArg, viewResponse } from '../view.js';
 import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
 import { client } from '../client.js';
 import { FlightIdent, pageParams, dateWindowParams, qs, resolveOutputDir, writePng } from './shared.js';
@@ -13,15 +14,16 @@ export function registerFlightTools(server: McpServer): void {
         'Get flights for an ident — a flight designator (e.g. UAL123, AAL100), aircraft registration (e.g. N12345), or fa_flight_id. Returns recent, current, and scheduled flights for that ident.',
       annotations: { readOnlyHint: true, openWorldHint: true },
       inputSchema: {
+        view: viewArg(),
         ident: FlightIdent.describe('Flight designator, registration, or fa_flight_id'),
         ident_type: z.enum(['designator', 'registration', 'fa_flight_id']).optional().describe('Disambiguate how `ident` is interpreted'),
         ...dateWindowParams,
         ...pageParams,
       },
     },
-    async ({ ident, ident_type, start, end, max_pages, cursor }) => {
+    async ({ ident, ident_type, start, end, max_pages, cursor, view }) => {
       const data = await client.get(`/flights/${ident}${qs({ ident_type, start, end, max_pages, cursor })}`);
-      return textResult(data);
+      return viewResponse(view, data);
     },
   );
 
@@ -32,13 +34,14 @@ export function registerFlightTools(server: McpServer): void {
         'Search airborne flights using AeroAPI\'s simplified query syntax — a single string of "-key value" pairs. Keys: -prefix -type -idents -identOrReg -airline -destination -origin -originOrDestination -aboveAltitude -belowAltitude -aboveGroundspeed -belowGroundspeed -latlong "MINLAT MINLON MAXLAT MAXLON" -filter {ga|airline}. Example: -airline UAL -belowAltitude 30000',
       annotations: { readOnlyHint: true, openWorldHint: true },
       inputSchema: {
+        view: viewArg(),
         query: z.string().min(1).describe('Simplified "-key value" search string (max 1000 bytes)'),
         ...pageParams,
       },
     },
-    async ({ query, max_pages, cursor }) => {
+    async ({ query, max_pages, cursor, view }) => {
       const data = await client.get(`/flights/search${qs({ query, max_pages, cursor })}`);
-      return textResult(data);
+      return viewResponse(view, data);
     },
   );
 
@@ -51,13 +54,14 @@ export function registerFlightTools(server: McpServer): void {
         'Common keys: ident, orig, dest (ICAO codes), aircraftType, alt (hundreds of ft), prefix, lifeguard, cancelled, arrived.',
       annotations: { readOnlyHint: true, openWorldHint: true },
       inputSchema: {
+        view: viewArg(),
         query: z.string().min(1).describe('Structured "{operator key value}" query, e.g. {match ident UAL*} {> alt 300}'),
         ...pageParams,
       },
     },
-    async ({ query, max_pages, cursor }) => {
+    async ({ query, max_pages, cursor, view }) => {
       const data = await client.get(`/flights/search/advanced${qs({ query, max_pages, cursor })}`);
-      return textResult(data);
+      return viewResponse(view, data);
     },
   );
 
@@ -67,13 +71,14 @@ export function registerFlightTools(server: McpServer): void {
       description: 'Get the position track (breadcrumb log) for a specific flight by fa_flight_id.',
       annotations: { readOnlyHint: true, openWorldHint: true },
       inputSchema: {
+        view: viewArg(),
         id: FlightIdent.describe('fa_flight_id of the flight'),
         include_estimated_positions: z.boolean().optional().describe('Include estimated positions where actual data is missing'),
       },
     },
-    async ({ id, include_estimated_positions }) => {
+    async ({ id, include_estimated_positions, view }) => {
       const data = await client.get(`/flights/${id}/track${qs({ include_estimated_positions })}`);
-      return textResult(data);
+      return viewResponse(view, data);
     },
   );
 
@@ -83,12 +88,13 @@ export function registerFlightTools(server: McpServer): void {
       description: 'Get the most recent reported position for an in-air flight by fa_flight_id.',
       annotations: { readOnlyHint: true, openWorldHint: true },
       inputSchema: {
+        view: viewArg(),
         id: FlightIdent.describe('fa_flight_id of the flight'),
       },
     },
-    async ({ id }) => {
+    async ({ id, view }) => {
       const data = await client.get(`/flights/${id}/position`);
-      return textResult(data);
+      return viewResponse(view, data);
     },
   );
 
@@ -98,12 +104,13 @@ export function registerFlightTools(server: McpServer): void {
       description: 'Get the decoded route (fixes/waypoints) for a specific flight by fa_flight_id.',
       annotations: { readOnlyHint: true, openWorldHint: true },
       inputSchema: {
+        view: viewArg(),
         id: FlightIdent.describe('fa_flight_id of the flight'),
       },
     },
-    async ({ id }) => {
+    async ({ id, view }) => {
       const data = await client.get(`/flights/${id}/route`);
-      return textResult(data);
+      return viewResponse(view, data);
     },
   );
 
@@ -135,7 +142,7 @@ export function registerFlightTools(server: McpServer): void {
       }
       const dir = resolveOutputDir(output_dir);
       const path = writePng(dir, `flight-map-${id}`, base64);
-      return textResult({ map: path });
+      return minifiedResult({ map: path });
     },
   );
 
@@ -146,15 +153,16 @@ export function registerFlightTools(server: McpServer): void {
         'Get historical flights for an ident (designator, registration, or fa_flight_id) beyond the recent window covered by fa_get_flights. NOTE: historical data requires a Standard or Premium AeroAPI tier — the free Personal tier returns 401.',
       annotations: { readOnlyHint: true, openWorldHint: true },
       inputSchema: {
+        view: viewArg(),
         ident: FlightIdent.describe('Flight designator, registration, or fa_flight_id'),
         ident_type: z.enum(['designator', 'registration', 'fa_flight_id']).optional().describe('Disambiguate how `ident` is interpreted'),
         ...dateWindowParams,
         ...pageParams,
       },
     },
-    async ({ ident, ident_type, start, end, max_pages, cursor }) => {
+    async ({ ident, ident_type, start, end, max_pages, cursor, view }) => {
       const data = await client.get(`/history/flights/${ident}${qs({ ident_type, start, end, max_pages, cursor })}`);
-      return textResult(data);
+      return viewResponse(view, data);
     },
   );
 
@@ -165,13 +173,14 @@ export function registerFlightTools(server: McpServer): void {
         'Search live flight POSITIONS using the structured "{operator key value}" query language (same grammar as fa_search_flights_advanced — NOT the simplified "-key value" syntax). Returns position points rather than flight summaries. Example: {match ident UAL*} {> alt 300}.',
       annotations: { readOnlyHint: true, openWorldHint: true },
       inputSchema: {
+        view: viewArg(),
         query: z.string().min(1).describe('Structured "{operator key value}" query, e.g. {match ident UAL*} {> alt 300}'),
         ...pageParams,
       },
     },
-    async ({ query, max_pages, cursor }) => {
+    async ({ query, max_pages, cursor, view }) => {
       const data = await client.get(`/flights/search/positions${qs({ query, max_pages, cursor })}`);
-      return textResult(data);
+      return viewResponse(view, data);
     },
   );
 
@@ -182,12 +191,13 @@ export function registerFlightTools(server: McpServer): void {
         'Count flights matching a query without returning the flights themselves. Returns { count }. Uses the SIMPLIFIED "-key value" syntax (same as fa_search_flights, NOT the structured grammar of fa_search_flights_advanced). Example: -airline UAL -belowAltitude 30000.',
       annotations: { readOnlyHint: true, openWorldHint: true },
       inputSchema: {
+        view: viewArg(),
         query: z.string().min(1).describe('Simplified "-key value" search string (same syntax as fa_search_flights), e.g. -airline UAL'),
       },
     },
-    async ({ query }) => {
+    async ({ query, view }) => {
       const data = await client.get(`/flights/search/count${qs({ query })}`);
-      return textResult(data);
+      return viewResponse(view, data);
     },
   );
 
@@ -198,13 +208,14 @@ export function registerFlightTools(server: McpServer): void {
         'Resolve a flight ident (designator/registration) to its canonical form and any alternate idents. NOTE: requires a Standard or Premium AeroAPI tier — the free Personal tier returns 401.',
       annotations: { readOnlyHint: true, openWorldHint: true },
       inputSchema: {
+        view: viewArg(),
         ident: FlightIdent.describe('Flight designator or registration to canonicalize'),
         ident_type: z.enum(['designator', 'registration', 'fa_flight_id']).optional().describe('Disambiguate how `ident` is interpreted'),
       },
     },
-    async ({ ident, ident_type }) => {
+    async ({ ident, ident_type, view }) => {
       const data = await client.get(`/flights/${ident}/canonical${qs({ ident_type })}`, { cache: 'static' });
-      return textResult(data);
+      return viewResponse(view, data);
     },
   );
 }
