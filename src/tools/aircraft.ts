@@ -1,5 +1,4 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { textResult } from '@chrischall/mcp-utils';
 import { viewArg, viewResponse } from '../view.js';
 import { client } from '../client.js';
 import { FlightIdent } from './shared.js';
