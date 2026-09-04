@@ -1,5 +1,24 @@
 # Changelog
 
+## [0.5.0](https://github.com/chrischall/flightaware-mcp/compare/v0.4.0...v0.5.0) (2026-09-04)
+
+
+### Features
+
+* **tools:** compact by default — strip media URLs, and minify every response ([#81](https://github.com/chrischall/flightaware-mcp/issues/81)) ([b9a194b](https://github.com/chrischall/flightaware-mcp/commit/b9a194b2ea9ed924275f5d101121c37446b3433d))
+
+
+### Bug Fixes
+
+* **build:** restore the literal em dash in the package description ([#85](https://github.com/chrischall/flightaware-mcp/issues/85)) ([0f169fa](https://github.com/chrischall/flightaware-mcp/commit/0f169fadb72ead758b8417d89940c102cc8a6f45))
+* **deps:** pick up @chrischall/mcp-utils 0.23.1 ([#86](https://github.com/chrischall/flightaware-mcp/issues/86)) ([fe9368b](https://github.com/chrischall/flightaware-mcp/commit/fe9368b32fe5e263cd9aefce53219ccf99f8f63d))
+* **deps:** pick up @chrischall/mcp-utils 0.23.2 ([#88](https://github.com/chrischall/flightaware-mcp/issues/88)) ([a2dc94d](https://github.com/chrischall/flightaware-mcp/commit/a2dc94dff9c2f2695c7c0180f2b9db72986c7e5a))
+
+
+### Refactor
+
+* **tools:** drop the dead textResult imports left by the view rollout ([#89](https://github.com/chrischall/flightaware-mcp/issues/89)) ([ab4c82e](https://github.com/chrischall/flightaware-mcp/commit/ab4c82ec68b0ef37256195d7ef08412dd74ff32d))
+
 ## [0.4.0](https://github.com/chrischall/flightaware-mcp/compare/v0.3.5...v0.4.0) (2026-09-01)
 
 
