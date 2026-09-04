@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.1](https://github.com/chrischall/flightaware-mcp/compare/v0.5.0...v0.5.1) (2026-09-04)
+
+
+### Documentation
+
+* **skill:** document the `view` response shape ([#90](https://github.com/chrischall/flightaware-mcp/issues/90)) ([079d7ab](https://github.com/chrischall/flightaware-mcp/commit/079d7abf2fd4e54c8ed2d5d274737bdec1255211))
+
 ## [0.5.0](https://github.com/chrischall/flightaware-mcp/compare/v0.4.0...v0.5.0) (2026-09-04)
 
 
