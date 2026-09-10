@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.5.2](https://github.com/chrischall/flightaware-mcp/compare/v0.5.1...v0.5.2) (2026-09-10)
+
+
+### Bug Fixes
+
+* **deps:** @chrischall/mcp-utils 0.26.1 ([#100](https://github.com/chrischall/flightaware-mcp/issues/100)) ([83c8940](https://github.com/chrischall/flightaware-mcp/commit/83c8940828095b2fd0026a8ccaca950d5cbc2d97))
+* **deps:** Bump hono from 4.13.0 to 4.13.7 ([#98](https://github.com/chrischall/flightaware-mcp/issues/98)) ([b70eb75](https://github.com/chrischall/flightaware-mcp/commit/b70eb75cfd867b8ea3403c9825804388d9b81cc7))
+
 ## [0.5.1](https://github.com/chrischall/flightaware-mcp/compare/v0.5.0...v0.5.1) (2026-09-04)
 
 
