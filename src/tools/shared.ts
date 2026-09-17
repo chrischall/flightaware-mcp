@@ -13,7 +13,10 @@ import { buildQueryString, readEnvVar, expandPath } from '@chrischall/mcp-utils'
 export const FlightIdent = z
   .string()
   .min(1)
-  .regex(/^[A-Za-z0-9.-]+$/, 'must be a flight ident, registration, or fa_flight_id (letters, digits, ".", "-")');
+  .regex(
+    /^[A-Za-z0-9.-]+$/,
+    'must be a flight ident, registration, or fa_flight_id (letters, digits, ".", "-")',
+  );
 
 /** Airport code (ICAO `KJFK`, IATA `JFK`, or LID) — alphanumeric only. */
 export const AirportCode = z
@@ -38,8 +41,13 @@ export const pageParams = {
     .min(1)
     .max(20)
     .optional()
-    .describe('Max pages to fetch, 1-20 (AeroAPI default: 1). Capped at 20 since AeroAPI bills per page.'),
-  cursor: z.string().optional().describe('Opaque paging cursor from a previous response\'s links.next'),
+    .describe(
+      'Max pages to fetch, 1-20 (AeroAPI default: 1). Capped at 20 since AeroAPI bills per page.',
+    ),
+  cursor: z
+    .string()
+    .optional()
+    .describe("Opaque paging cursor from a previous response's links.next"),
 };
 
 /** Date window shared by flight/board/history calls (ISO-8601 timestamps). */
