@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.0.0](https://github.com/chrischall/flightaware-mcp/compare/v0.5.3...v1.0.0) (2026-09-17)
+
+
+### ⚠ BREAKING CHANGES
+
+* **mcp:** migrate server to SDK v2 ([#106](https://github.com/chrischall/flightaware-mcp/issues/106))
+
+### Features
+
+* **mcp:** migrate server to SDK v2 ([#106](https://github.com/chrischall/flightaware-mcp/issues/106)) ([7dfa631](https://github.com/chrischall/flightaware-mcp/commit/7dfa63110b19c5e58a808ebb96fcb77906cae4e5))
+
+
+### Bug Fixes
+
+* **mcp:** verify SDK v2 tool schemas ([#109](https://github.com/chrischall/flightaware-mcp/issues/109)) ([e855a13](https://github.com/chrischall/flightaware-mcp/commit/e855a1346711f36e5597ea43204f33e3f7862a43))
+
 ## [0.5.3](https://github.com/chrischall/flightaware-mcp/compare/v0.5.2...v0.5.3) (2026-09-15)
 
 
