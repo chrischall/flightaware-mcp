@@ -65,6 +65,31 @@ describe('tool roster', () => {
       },
       required: ['ident'],
     });
+    expect(tools.find((tool) => tool.name === 'fa_get_airport_flights')?.inputSchema).toMatchObject({
+      properties: {
+        board: {
+          type: 'string',
+          enum: ['all', 'arrivals', 'departures', 'scheduled_arrivals', 'scheduled_departures'],
+          default: 'all',
+        },
+      },
+    });
+    expect(tools.find((tool) => tool.name === 'fa_get_airport_weather')?.inputSchema).toMatchObject({
+      properties: {
+        report: {
+          type: 'string',
+          enum: ['observations', 'forecast'],
+          default: 'observations',
+        },
+      },
+    });
+    expect(tools.find((tool) => tool.name === 'fa_delete_alert')?.inputSchema).toMatchObject({
+      properties: {
+        id: { type: 'integer', exclusiveMinimum: 0 },
+        confirm: { type: 'boolean' },
+      },
+      required: ['id'],
+    });
     await h.close();
   });
 });
