@@ -1,7 +1,7 @@
-import type { McpServer } from "@modelcontextprotocol/server";
-import { readEnvVar } from "@chrischall/mcp-utils";
-import { registerCredentialHealthcheckTool } from "@chrischall/mcp-utils/healthcheck";
-import { client as defaultClient, type FlightAwareClient } from "../client.js";
+import type { McpServer } from '@modelcontextprotocol/server';
+import { readEnvVar } from '@chrischall/mcp-utils';
+import { registerCredentialHealthcheckTool } from '@chrischall/mcp-utils/healthcheck';
+import { client as defaultClient, type FlightAwareClient } from '../client.js';
 
 /**
  * `fa_healthcheck` — the one call that answers "is this connector working?",
@@ -22,26 +22,26 @@ import { client as defaultClient, type FlightAwareClient } from "../client.js";
 type ReadEnv = (key: string) => string | undefined;
 
 /** A large, permanently-existing airport: never 404s, and cheap to look up. */
-const PROBE_AIRPORT = "KJFK";
+const PROBE_AIRPORT = 'KJFK';
 
 export function classifyFlightAwareError(
   err: unknown,
 ): { kind: string; hint?: string } | undefined {
   const msg = err instanceof Error ? err.message : String(err);
 
-  if (msg.includes("Rate limited")) {
+  if (msg.includes('Rate limited')) {
     return {
-      kind: "rate_limited",
-      hint: "AeroAPI rate-limited the probe. The key is fine — retry in a moment.",
+      kind: 'rate_limited',
+      hint: 'AeroAPI rate-limited the probe. The key is fine — retry in a moment.',
     };
   }
   if (/401|unauthorized|forbidden|403/i.test(msg)) {
     return {
-      kind: "credential_rejected",
+      kind: 'credential_rejected',
       hint:
-        "AeroAPI rejected the key. Check AEROAPI_API_KEY at https://flightaware.com/aeroapi/portal/ — " +
-        "and note that some endpoints require a Standard or Premium tier, so a valid Personal-tier key " +
-        "can still be refused for those (this probe uses one every tier can make).",
+        'AeroAPI rejected the key. Check AEROAPI_API_KEY at https://flightaware.com/aeroapi/portal/ — ' +
+        'and note that some endpoints require a Standard or Premium tier, so a valid Personal-tier key ' +
+        'can still be refused for those (this probe uses one every tier can make).',
     };
   }
   return undefined;
@@ -55,22 +55,21 @@ export function registerHealthcheckTools(
    * client, so a required parameter here is `undefined` in production while
    * tests that inject a mock still pass.
    */
-  client: Pick<FlightAwareClient, "get"> = defaultClient,
+  client: Pick<FlightAwareClient, 'get'> = defaultClient,
   /** Seam: injectable so tests need no process env. */
   readEnv: ReadEnv = (k) => readEnvVar(k),
 ): void {
   registerCredentialHealthcheckTool({
     server,
-    prefix: "fa",
-    hostLabel: "aeroapi.flightaware.com",
+    prefix: 'fa',
+    hostLabel: 'aeroapi.flightaware.com',
     probePath: `/airports/${PROBE_AIRPORT}`,
     resolveCredential: async () => ({
-      source: readEnv("AEROAPI_API_KEY") ? "AEROAPI_API_KEY" : null,
+      source: readEnv('AEROAPI_API_KEY') ? 'AEROAPI_API_KEY' : null,
     }),
     // `cache: 'static'` is the point: airport metadata does not change, so
     // repeat healthchecks are served from cache rather than re-billed.
-    probeFn: () =>
-      client.get(`/airports/${PROBE_AIRPORT}`, { cache: "static" }),
+    probeFn: () => client.get(`/airports/${PROBE_AIRPORT}`, { cache: 'static' }),
     classifyThrown: classifyFlightAwareError,
   });
 }

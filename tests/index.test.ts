@@ -19,7 +19,8 @@ describe('tool roster', () => {
       registerAlertTools(s);
       registerHealthcheckTools(s);
     });
-    const names = (await h.listTools()).map((t) => t.name).sort();
+    const { tools } = await h.client.listTools();
+    const names = tools.map((t) => t.name).sort();
     expect(names).toEqual([
       'fa_count_flights',
       'fa_create_alert',
@@ -56,6 +57,14 @@ describe('tool roster', () => {
       'fa_set_alerts_endpoint',
       'fa_update_alert',
     ]);
+    const flights = tools.find((tool) => tool.name === 'fa_get_flights');
+    expect(flights?.inputSchema).toMatchObject({
+      type: 'object',
+      properties: {
+        ident: { type: 'string' },
+      },
+      required: ['ident'],
+    });
     await h.close();
   });
 });
