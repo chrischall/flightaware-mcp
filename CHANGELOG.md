@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.0](https://github.com/chrischall/flightaware-mcp/compare/v1.0.0...v1.1.0) (2026-09-19)
+
+
+### Features
+
+* **deps:** take mcp-utils 1.0.0, fixing server/discover ([#112](https://github.com/chrischall/flightaware-mcp/issues/112)) ([0fa61ed](https://github.com/chrischall/flightaware-mcp/commit/0fa61ed3baf64068c90f7aeb87edcaa38a43e1c0))
+
 ## [1.0.0](https://github.com/chrischall/flightaware-mcp/compare/v0.5.3...v1.0.0) (2026-09-17)
 
 
