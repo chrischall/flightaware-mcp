@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.1.1](https://github.com/chrischall/flightaware-mcp/compare/v1.1.0...v1.1.1) (2026-09-23)
+
+
+### Bug Fixes
+
+* **deps:** Bump dotenv from 17.4.2 to 18.0.1 ([#118](https://github.com/chrischall/flightaware-mcp/issues/118)) ([dd0b0fe](https://github.com/chrischall/flightaware-mcp/commit/dd0b0fe3c2fbb583a32b73fc41a9950fb811e3fd))
+* **deps:** Bump zod in the production-dependencies group ([#117](https://github.com/chrischall/flightaware-mcp/issues/117)) ([c9049e5](https://github.com/chrischall/flightaware-mcp/commit/c9049e5317cfa19430972be8a88aa00ba14088ef))
+* **deps:** require zod ^4.6.5 to match @chrischall/mcp-utils 2.4.0 ([#121](https://github.com/chrischall/flightaware-mcp/issues/121)) ([8fca58c](https://github.com/chrischall/flightaware-mcp/commit/8fca58c5ac88dfcef8a534d3d07811d512c53b94))
+* **deps:** upgrade @chrischall/mcp-utils to 2.4.0 and @fetchproxy/* to 3.2.0 ([#120](https://github.com/chrischall/flightaware-mcp/issues/120)) ([1d0e40e](https://github.com/chrischall/flightaware-mcp/commit/1d0e40e442c13b1725881296fad4fb328c0f622e))
+
 ## [1.1.0](https://github.com/chrischall/flightaware-mcp/compare/v1.0.0...v1.1.0) (2026-09-19)
 
 
