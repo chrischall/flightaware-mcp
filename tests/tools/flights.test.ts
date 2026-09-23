@@ -37,6 +37,19 @@ describe('flight tools', () => {
     await h.close();
   });
 
+  it('fa_get_flight_map is not annotated read-only, since it writes files to disk', async () => {
+    const h = await createTestHarness(registerFlightTools);
+    const { tools } = await h.client.listTools();
+    const tool = tools.find((t) => t.name === 'fa_get_flight_map');
+    expect(tool?.annotations).toMatchObject({
+      readOnlyHint: false,
+      destructiveHint: false,
+      idempotentHint: false,
+      openWorldHint: true,
+    });
+    await h.close();
+  });
+
   it('fa_get_flight_map returns inline base64 when inline:true', async () => {
     const png = Buffer.from('fake-png').toString('base64');
     vi.spyOn(client, 'get').mockResolvedValue({ map: png });
