@@ -136,7 +136,13 @@ export function registerFlightTools(server: McpServer): void {
     {
       description:
         'Get a rendered map image (PNG) of a flight by fa_flight_id. Writes the PNG to disk (default: $AEROAPI_OUTPUT_DIR or cwd) and returns the path, or returns it inline as base64 when inline:true.',
-      annotations: { readOnlyHint: true, openWorldHint: true },
+      // Not read-only: the default path creates directories and writes a PNG file.
+      annotations: {
+        readOnlyHint: false,
+        destructiveHint: false,
+        idempotentHint: false,
+        openWorldHint: true,
+      },
       inputSchema: z.object({
         id: FlightIdent.describe('fa_flight_id of the flight'),
         height: z.number().int().min(1).optional().describe('Image height in pixels'),
