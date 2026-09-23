@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.2](https://github.com/chrischall/flightaware-mcp/compare/v1.1.1...v1.1.2) (2026-09-23)
+
+
+### Bug Fixes
+
+* **flights:** stop marking fa_get_flight_map read-only ([#122](https://github.com/chrischall/flightaware-mcp/issues/122)) ([8a7f52e](https://github.com/chrischall/flightaware-mcp/commit/8a7f52e843f48471eb9901825689564c2d9fb5c6))
+
 ## [1.1.1](https://github.com/chrischall/flightaware-mcp/compare/v1.1.0...v1.1.1) (2026-09-23)
 
 
