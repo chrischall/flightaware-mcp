@@ -62,7 +62,7 @@ rung when you omit it — see [Response shape](#response-shape-view).
 
 **Schedules / predictive:** `fa_get_scheduled_flights`, `fa_foresight_search` (Foresight is a premium tier — expect a 402/403 on a Personal key)
 
-**Alerts** (account-mutating writes are confirm-gated — without `confirm: true` they return a dry-run preview and make no network call): `fa_list_alerts`, `fa_get_alert`, `fa_create_alert`, `fa_update_alert`, `fa_delete_alert`, `fa_get_alerts_endpoint`, `fa_set_alerts_endpoint`
+**Alerts** (account-mutating writes ask the user to confirm first — a confirmation prompt where the client supports one; otherwise the first call makes no network call and returns a preview plus a `confirmToken`, and only a repeat call with that token, after the user approves, performs the write): `fa_list_alerts`, `fa_get_alert`, `fa_create_alert`, `fa_update_alert`, `fa_delete_alert`, `fa_get_alerts_endpoint`, `fa_set_alerts_endpoint`
 
 ## Response shape (`view`)
 

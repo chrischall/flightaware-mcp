@@ -86,7 +86,7 @@ describe('tool roster', () => {
     expect(tools.find((tool) => tool.name === 'fa_delete_alert')?.inputSchema).toMatchObject({
       properties: {
         id: { type: 'integer', exclusiveMinimum: 0 },
-        confirm: { type: 'boolean' },
+        confirmToken: { type: 'string' },
       },
       required: ['id'],
     });
