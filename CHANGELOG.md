@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.1](https://github.com/chrischall/flightaware-mcp/compare/v1.2.0...v1.2.1) (2026-09-24)
+
+
+### Bug Fixes
+
+* **deps:** Bump dotenv in the production-dependencies group ([#129](https://github.com/chrischall/flightaware-mcp/issues/129)) ([02e325d](https://github.com/chrischall/flightaware-mcp/commit/02e325debeaed63d9705dadc501055fbef98fc68))
+
 ## [1.2.0](https://github.com/chrischall/flightaware-mcp/compare/v1.1.2...v1.2.0) (2026-09-24)
 
 
