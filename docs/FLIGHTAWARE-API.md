@@ -136,10 +136,12 @@ never cached.
 | `fa_get_scheduled_flights` | `GET /schedules/{date_start}/{date_end}` | Dates `YYYY-MM-DD`. Query: `origin`, `destination`, `airline`, `flight_number`, `include_codeshares`, `max_pages`, `cursor`. **[verify-pending]** |
 | `fa_foresight_search` | `GET /foresight/flights/search/advanced` | Predictive search. **Premium tier** — expect `402`/`403` on a Personal key. Query: `query`, `max_pages`, `cursor`. **[pinned-from-spec]** |
 
-## Alerts (account-mutating — confirm-gated writes)
+## Alerts (account-mutating — confirmed writes)
 
-Alerts are push notifications on YOUR account. Mutations take `confirm: true`;
-without it they return a dry-run preview and make NO network call.
+Alerts are push notifications on YOUR account. Mutations ask the user to confirm
+first: a confirmation prompt where the client supports one; otherwise the first
+call returns a preview of the request plus a `confirmToken` and makes NO network
+call, and only a repeat call with that token sends it.
 
 | Tool | Method + path | Write? | Notes |
 | --- | --- | --- | --- |

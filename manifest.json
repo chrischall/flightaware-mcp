@@ -187,15 +187,15 @@
     },
     {
       "name": "fa_create_alert",
-      "description": "Create a flight alert (confirm-gated)"
+      "description": "Create a flight alert (asks to confirm first)"
     },
     {
       "name": "fa_update_alert",
-      "description": "Update a flight alert (confirm-gated)"
+      "description": "Update a flight alert (asks to confirm first)"
     },
     {
       "name": "fa_delete_alert",
-      "description": "Delete a flight alert (confirm-gated)"
+      "description": "Delete a flight alert (asks to confirm first)"
     },
     {
       "name": "fa_get_alerts_endpoint",
@@ -203,7 +203,7 @@
     },
     {
       "name": "fa_set_alerts_endpoint",
-      "description": "Set the alert delivery endpoint (confirm-gated)"
+      "description": "Set the alert delivery endpoint (asks to confirm first)"
     },
     {
       "name": "fa_healthcheck",

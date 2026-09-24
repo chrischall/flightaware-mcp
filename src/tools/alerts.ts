@@ -1,6 +1,11 @@
 import { z } from 'zod';
-import type { McpServer } from '@modelcontextprotocol/server';
-import { minifiedResult, schemaConfirm } from '@chrischall/mcp-utils';
+import type { McpServer, ServerContext } from '@modelcontextprotocol/server';
+import {
+  confirmationFromEnv,
+  confirmTokenParam,
+  minifiedResult,
+  requireConfirmationWithFallback,
+} from '@chrischall/mcp-utils';
 import { viewArg, viewResponse } from '../view.js';
 import { client } from '../client.js';
 import { AirportCode, AlertId, FlightIdent, pageParams, qs } from './shared.js';
@@ -9,6 +14,10 @@ import { AirportCode, AlertId, FlightIdent, pageParams, qs } from './shared.js';
 // tier returns 401 for every /alerts endpoint. Surfaced in each tool's
 // description so the gating is obvious before the call.
 const TIER = ' Requires a Standard or Premium AeroAPI tier (the free Personal tier returns 401).';
+
+// How every alert mutation asks before it writes, appended to its description.
+const CONFIRM =
+  ' Asks the user to confirm first: a confirmation prompt where the client supports one; otherwise the first call returns a preview of the request (method, path, body) and a confirmToken, makes NO network call, and only a repeat call with that token proceeds (see MCP_CONFIRM_MODE).';
 
 /** The mutable fields of a flight alert (shared by create + update). */
 const alertConfigSchema = {
@@ -52,6 +61,44 @@ function buildAlertBody(args: Record<string, unknown>): Record<string, unknown> 
   return body;
 }
 
+/** The exact request an alert mutation will send — shown to the user and hashed into the token. */
+interface AlertWrite {
+  method: 'POST' | 'PUT' | 'DELETE';
+  path: string;
+  body?: Record<string, unknown>;
+}
+
+/**
+ * Gate an alert mutation on the user's confirmation. `undefined` means
+ * proceed; anything else is the result to return (a prompt, a phase-1
+ * preview + confirmToken, or a refusal).
+ */
+function confirmAlertWrite(
+  ctx: ServerContext,
+  opts: {
+    tool: string;
+    action: string;
+    message: string;
+    target: string;
+    confirmToken: string | undefined;
+    request: AlertWrite;
+  },
+) {
+  const { tool, action, message, target, confirmToken, request } = opts;
+  const preview: Record<string, unknown> = { ...request };
+  return requireConfirmationWithFallback(
+    ctx,
+    confirmationFromEnv({
+      action,
+      message,
+      details: preview,
+      tool,
+      confirmToken,
+      subject: () => ({ target, payload: request, preview }),
+    }),
+  );
+}
+
 export function registerAlertTools(server: McpServer): void {
   server.registerTool(
     'fa_list_alerts',
@@ -89,26 +136,25 @@ export function registerAlertTools(server: McpServer): void {
     'fa_create_alert',
     {
       description:
-        'Create a flight alert on your AeroAPI account. Without confirm:true this returns a dry-run preview of the request and makes NO network call; with confirm:true it creates the alert.' +
-        TIER,
+        'Create a flight alert on your AeroAPI account.' + CONFIRM + TIER,
       annotations: {
         readOnlyHint: false,
         idempotentHint: false,
         openWorldHint: true,
       },
-      inputSchema: z.object({ ...alertConfigSchema, confirm: schemaConfirm }),
+      inputSchema: z.object({ ...alertConfigSchema, confirmToken: confirmTokenParam }),
     },
-    async ({ confirm, ...args }) => {
+    async ({ confirmToken, ...args }, ctx) => {
       const body = buildAlertBody(args as Record<string, unknown>);
-      if (confirm !== true) {
-        return minifiedResult({
-          dryRun: true,
-          method: 'POST',
-          path: '/alerts',
-          body,
-          note: 'Dry run — re-run with confirm:true to create this alert.',
-        });
-      }
+      const gate = await confirmAlertWrite(ctx, {
+        tool: 'fa_create_alert',
+        action: 'alerts.create',
+        message: 'Review and confirm creating this flight alert:',
+        target: '',
+        confirmToken,
+        request: { method: 'POST', path: '/alerts', body },
+      });
+      if (gate) return gate;
       const res = await client.write('POST', '/alerts', body);
       return minifiedResult({
         created: true,
@@ -123,8 +169,7 @@ export function registerAlertTools(server: McpServer): void {
     'fa_update_alert',
     {
       description:
-        'Update an existing flight alert (replaces its configuration). Without confirm:true this returns a dry-run preview and makes NO network call; with confirm:true it applies the update.' +
-        TIER,
+        'Update an existing flight alert (replaces its configuration).' + CONFIRM + TIER,
       annotations: {
         readOnlyHint: false,
         idempotentHint: true,
@@ -133,21 +178,21 @@ export function registerAlertTools(server: McpServer): void {
       inputSchema: z.object({
         id: AlertId.describe('Alert id to update'),
         ...alertConfigSchema,
-        confirm: schemaConfirm,
+        confirmToken: confirmTokenParam,
       }),
     },
-    async ({ id, confirm, ...args }) => {
+    async ({ id, confirmToken, ...args }, ctx) => {
       const body = buildAlertBody(args as Record<string, unknown>);
       const path = `/alerts/${id}`;
-      if (confirm !== true) {
-        return minifiedResult({
-          dryRun: true,
-          method: 'PUT',
-          path,
-          body,
-          note: 'Dry run — re-run with confirm:true to update this alert.',
-        });
-      }
+      const gate = await confirmAlertWrite(ctx, {
+        tool: 'fa_update_alert',
+        action: 'alerts.update',
+        message: 'Review and confirm replacing this flight alert:',
+        target: String(id),
+        confirmToken,
+        request: { method: 'PUT', path, body },
+      });
+      if (gate) return gate;
       const res = await client.write('PUT', path, body);
       return minifiedResult({
         updated: true,
@@ -162,8 +207,7 @@ export function registerAlertTools(server: McpServer): void {
     'fa_delete_alert',
     {
       description:
-        'Delete a flight alert by id. Without confirm:true this returns a dry-run preview and makes NO network call; with confirm:true it deletes the alert.' +
-        TIER,
+        'Delete a flight alert by id.' + CONFIRM + TIER,
       annotations: {
         readOnlyHint: false,
         idempotentHint: true,
@@ -171,19 +215,20 @@ export function registerAlertTools(server: McpServer): void {
       },
       inputSchema: z.object({
         id: AlertId.describe('Alert id to delete'),
-        confirm: schemaConfirm,
+        confirmToken: confirmTokenParam,
       }),
     },
-    async ({ id, confirm }) => {
+    async ({ id, confirmToken }, ctx) => {
       const path = `/alerts/${id}`;
-      if (confirm !== true) {
-        return minifiedResult({
-          dryRun: true,
-          method: 'DELETE',
-          path,
-          note: 'Dry run — re-run with confirm:true to delete this alert.',
-        });
-      }
+      const gate = await confirmAlertWrite(ctx, {
+        tool: 'fa_delete_alert',
+        action: 'alerts.delete',
+        message: 'Review and confirm deleting this flight alert:',
+        target: String(id),
+        confirmToken,
+        request: { method: 'DELETE', path },
+      });
+      if (gate) return gate;
       const res = await client.write('DELETE', path);
       return minifiedResult({
         deleted: true,
@@ -213,8 +258,7 @@ export function registerAlertTools(server: McpServer): void {
     'fa_set_alerts_endpoint',
     {
       description:
-        'Set the delivery (webhook) endpoint AeroAPI POSTs alert notifications to. Without confirm:true this returns a dry-run preview and makes NO network call; with confirm:true it applies the change.' +
-        TIER,
+        'Set the delivery (webhook) endpoint AeroAPI POSTs alert notifications to.' + CONFIRM + TIER,
       annotations: {
         readOnlyHint: false,
         idempotentHint: true,
@@ -223,21 +267,21 @@ export function registerAlertTools(server: McpServer): void {
       inputSchema: z.object({
         url: z.string().url().describe('HTTPS URL AeroAPI will POST alert payloads to'),
         format: z.enum(['json', 'json/post', 'xml']).optional().describe('Delivery payload format'),
-        confirm: schemaConfirm,
+        confirmToken: confirmTokenParam,
       }),
     },
-    async ({ url, format, confirm }) => {
+    async ({ url, format, confirmToken }, ctx) => {
       const body: Record<string, unknown> = { url };
       if (format) body.format = format;
-      if (confirm !== true) {
-        return minifiedResult({
-          dryRun: true,
-          method: 'PUT',
-          path: '/alerts/endpoint',
-          body,
-          note: 'Dry run — re-run with confirm:true to set the delivery endpoint.',
-        });
-      }
+      const gate = await confirmAlertWrite(ctx, {
+        tool: 'fa_set_alerts_endpoint',
+        action: 'alerts.set_endpoint',
+        message: 'Review and confirm changing the alert delivery endpoint:',
+        target: '/alerts/endpoint',
+        confirmToken,
+        request: { method: 'PUT', path: '/alerts/endpoint', body },
+      });
+      if (gate) return gate;
       const res = await client.write('PUT', '/alerts/endpoint', body);
       return minifiedResult({
         updated: true,

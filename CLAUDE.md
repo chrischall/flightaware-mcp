@@ -53,9 +53,14 @@ so the host's install-time `tools/list` probe still succeeds.
 
 ## Conventions
 
-- **Confirm-gated writes.** Every alert mutation takes `confirm` (`schemaConfirm`).
-  Without `confirm: true` it makes NO network call and returns a dry-run preview;
-  with it, the call routes through `client.write()`.
+- **Confirmed writes.** Every alert mutation takes `confirmToken`
+  (`confirmTokenParam`) and gates on `confirmAlertWrite()` in `alerts.ts`
+  (mcp-utils `requireConfirmationWithFallback` + `confirmationFromEnv`). A client
+  with elicitation gets a prompt; one without gets a phase-1 preview of the exact
+  `{ method, path, body }` plus a token and NO network call, and only a repeat
+  call with that token routes through `client.write()`. The request is hashed
+  into the token, so a changed argument is refused as `DRAFT_CHANGED`.
+  `MCP_CONFIRM_MODE` / `MCP_CONFIRM_TTL_SECONDS` / `MCP_CONFIRM_SECRET` tune it.
 - **Path-injection guards.** `ident`/`id`/codes are interpolated into the URL
   path, so their zod schemas restrict the charset (see `shared.ts`).
 - **Verify before trusting a shape.** Many response shapes are coded from the

@@ -33,7 +33,17 @@ Get a key at [flightaware.com/aeroapi/portal](https://www.flightaware.com/aeroap
 | Alerts | `fa_list_alerts`, `fa_get_alert`, `fa_create_alert`, `fa_update_alert`, `fa_delete_alert`, `fa_get_alerts_endpoint`, `fa_set_alerts_endpoint` |
 | Health | `fa_healthcheck` — is this connector working? Reports whether AEROAPI_API_KEY resolved, whether AeroAPI accepted it, and what to fix. Uses a static-cached lookup, so repeat checks are not re-billed. |
 
-Alert mutations are **confirm-gated**: without `confirm: true` they return a dry-run preview and make no network call.
+Alert mutations (`fa_create_alert`, `fa_update_alert`, `fa_delete_alert`, `fa_set_alerts_endpoint`) ask you to confirm before they write — see [Confirmations](#confirmations).
+
+## Confirmations
+
+Every alert mutation asks for your confirmation before it touches your AeroAPI account. A client that can show a confirmation prompt (Claude Code) shows one. On a client that cannot (claude.ai, Claude Desktop), the first call makes **no** network call and returns a preview of the exact request (method, path, body) plus a `confirmToken`; only a repeat call with that token sends it. A token acts once, expires, and is refused if the request changed since the preview.
+
+| variable | default | |
+|---|---|---|
+| `MCP_CONFIRM_MODE` | `ask-user` | What a write does on a client that cannot show a confirmation prompt (claude.ai, Claude Desktop). `ask-user`: two steps — the first call does nothing and returns a preview plus a token, and the model must get your approval in chat before calling again with it. `auto`: the same two steps, but the model may use the token after reviewing the preview itself. `refuse`: writes are refused on such clients. A client that can show prompts (Claude Code) always gets the real prompt. An unrecognised value is treated as `refuse`. |
+| `MCP_CONFIRM_TTL_SECONDS` | `600` | How long a token stays valid. |
+| `MCP_CONFIRM_SECRET` | random per process | Signing key; set it only if tokens must survive a server restart. |
 
 ## Configuration
 
