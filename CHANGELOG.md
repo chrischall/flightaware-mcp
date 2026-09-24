@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.2.0](https://github.com/chrischall/flightaware-mcp/compare/v1.1.2...v1.2.0) (2026-09-24)
+
+
+### Features
+
+* confirm writes with a preview token instead of confirm: true ([#124](https://github.com/chrischall/flightaware-mcp/issues/124)) ([07e52f6](https://github.com/chrischall/flightaware-mcp/commit/07e52f671db45fbf5e95ebe7bf5a008a6a87ef8f))
+
+
+### Documentation
+
+* finish the confirm-token terminology and env reference ([#127](https://github.com/chrischall/flightaware-mcp/issues/127)) ([b07199e](https://github.com/chrischall/flightaware-mcp/commit/b07199e349eef3a43b328170ba0d21be2ac45dcd)), closes [#125](https://github.com/chrischall/flightaware-mcp/issues/125)
+
 ## [1.1.2](https://github.com/chrischall/flightaware-mcp/compare/v1.1.1...v1.1.2) (2026-09-23)
 
 
