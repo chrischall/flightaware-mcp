@@ -97,8 +97,8 @@ Why the six without it have none:
   for, so it is not wired and never should be.
 - **`fa_healthcheck`** answers "is this connector working?" with a verdict, not
   a record. There is nothing in it to strip.
-- **The four alert writes return receipts** — an id, a status, a dry-run
-  preview. A receipt has nothing to strip and everything to keep.
+- **The four alert writes return receipts** — an id, a status, a
+  preview and its `confirmToken`. A receipt has nothing to strip and everything to keep.
   `fa_get_alerts_endpoint` is the read of that pair and does take `view`.
 
 Passing `view` to one of those six is not an error and not a warning: MCP tool
