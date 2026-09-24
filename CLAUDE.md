@@ -25,6 +25,9 @@ AEROAPI_API_KEY=<key>            # Required. Create at https://www.flightaware.c
 AEROAPI_OUTPUT_DIR=<dir>         # Optional. Where flight-map PNGs are written (default: cwd)
 AEROAPI_CACHE_TTL=<secs>        # Optional. Live-data read-cache TTL (default 15; 0 disables)
 AEROAPI_STATIC_CACHE_TTL=<secs> # Optional. Reference-data read-cache TTL (default 3600; 0 disables)
+MCP_CONFIRM_MODE=<mode>         # Optional. ask-user|auto|refuse for writes on clients without prompts (default ask-user; unrecognised = refuse)
+MCP_CONFIRM_TTL_SECONDS=<secs>  # Optional. confirmToken lifetime (default 600)
+MCP_CONFIRM_SECRET=<secret>     # Optional. Token signing key (default random per process; set to survive restarts)
 ```
 
 `client.get(path, { cache })` is backed by an in-memory cache keyed by full
