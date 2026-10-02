@@ -1,7 +1,5 @@
-import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
-import { isAbsolute, join, resolve } from 'node:path';
 import { z } from 'zod';
-import { buildQueryString, readEnvVar, expandPath } from '@chrischall/mcp-utils';
+import { buildQueryString } from '@chrischall/mcp-utils';
 
 /**
  * Flight ident / id (designator like `UAL123`, registration `N12345`, or an
@@ -62,22 +60,4 @@ export const dateWindowParams = {
  */
 export function qs(params: Record<string, unknown>): string {
   return buildQueryString(params);
-}
-
-/** Resolve the directory map PNGs are written to: arg → $AEROAPI_OUTPUT_DIR → cwd. */
-export function resolveOutputDir(dir?: string): string {
-  const chosen = dir ?? readEnvVar('AEROAPI_OUTPUT_DIR') ?? process.cwd();
-  const abs = isAbsolute(chosen) ? chosen : resolve(process.cwd(), expandPath(chosen));
-  if (!existsSync(abs)) mkdirSync(abs, { recursive: true });
-  return abs;
-}
-
-/** Write a base64 PNG to `dir` under a non-overwriting filename; return the path. */
-export function writePng(dir: string, base: string, base64: string): string {
-  let name = `${base}.png`;
-  let n = 1;
-  while (existsSync(join(dir, name))) name = `${base}-${n++}.png`;
-  const path = join(dir, name);
-  writeFileSync(path, Buffer.from(base64, 'base64'));
-  return path;
 }

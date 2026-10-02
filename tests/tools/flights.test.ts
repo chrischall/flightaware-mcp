@@ -2,8 +2,94 @@ import { describe, it, expect, vi, afterEach } from 'vitest';
 import { createTestHarness, parseToolResult } from '@chrischall/mcp-utils/test';
 import { registerFlightTools } from '../../src/tools/flights.js';
 import { client } from '../../src/client.js';
+import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync, symlinkSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { dirname, join } from 'node:path';
 
 afterEach(() => vi.restoreAllMocks());
+
+describe('fa_get_flight_map file output', () => {
+  const png = Buffer.from('fake-png').toString('base64');
+  const ID = 'UAL123-1700000000-airline-0123';
+
+  async function saveMap(args: Record<string, unknown>): Promise<string> {
+    vi.spyOn(client, 'get').mockResolvedValue({ map: png });
+    const h = await createTestHarness(registerFlightTools);
+    try {
+      return parseToolResult<{ map: string }>(await h.callTool('fa_get_flight_map', { id: ID, ...args })).map;
+    } finally {
+      await h.close();
+    }
+  }
+
+  it('writes into output_dir under a never-overwriting name', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'fa-'));
+    try {
+      const p1 = await saveMap({ output_dir: dir });
+      const p2 = await saveMap({ output_dir: dir });
+      expect(p1).toBe(join(dir, `flight-map-${ID}.png`));
+      expect(p2).toBe(join(dir, `flight-map-${ID}-2.png`));
+      expect(readFileSync(p1).toString()).toBe('fake-png');
+      expect(readFileSync(p2).toString()).toBe('fake-png');
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('creates a nested output_dir that does not exist yet', async () => {
+    const base = mkdtempSync(join(tmpdir(), 'fa-'));
+    const dir = join(base, 'nested', 'out');
+    try {
+      expect(dirname(await saveMap({ output_dir: dir }))).toBe(dir);
+    } finally {
+      rmSync(base, { recursive: true, force: true });
+    }
+  });
+
+  it('never writes through a symlink planted at the destination name', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'fa-'));
+    const outside = join(mkdtempSync(join(tmpdir(), 'fa-out-')), 'target.png');
+    try {
+      symlinkSync(outside, join(dir, `flight-map-${ID}.png`)); // dangling: looks "free" to existsSync
+      const p = await saveMap({ output_dir: dir });
+      expect(p).toBe(join(dir, `flight-map-${ID}-2.png`));
+      expect(existsSync(outside)).toBe(false);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('confines a per-call output_dir to $AEROAPI_OUTPUT_DIR once the operator sets it', async () => {
+    const root = mkdtempSync(join(tmpdir(), 'fa-root-'));
+    const elsewhere = mkdtempSync(join(tmpdir(), 'fa-else-'));
+    vi.stubEnv('AEROAPI_OUTPUT_DIR', root);
+    try {
+      expect(dirname(await saveMap({ output_dir: join(root, 'maps') }))).toBe(join(root, 'maps'));
+      vi.spyOn(client, 'get').mockResolvedValue({ map: png });
+      const h = await createTestHarness(registerFlightTools);
+      const res = await h.callTool('fa_get_flight_map', { id: ID, output_dir: elsewhere });
+      await h.close();
+      expect(res.isError).toBe(true);
+      expect(readdirSync(elsewhere)).toEqual([]);
+    } finally {
+      vi.unstubAllEnvs();
+      rmSync(root, { recursive: true, force: true });
+      rmSync(elsewhere, { recursive: true, force: true });
+    }
+  });
+
+  it('falls back to $AEROAPI_OUTPUT_DIR when no output_dir is given', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'fa-'));
+    vi.stubEnv('AEROAPI_OUTPUT_DIR', dir);
+    try {
+      await saveMap({});
+      expect(readdirSync(dir)).toEqual([`flight-map-${ID}.png`]);
+    } finally {
+      vi.unstubAllEnvs();
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+});
 
 describe('flight tools', () => {
   it('fa_get_flights calls /flights/{ident} with query params', async () => {

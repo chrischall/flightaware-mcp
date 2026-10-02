@@ -22,7 +22,7 @@ and an empty body on delete (neither fits a JSON-only client). No fetchproxy.
 
 ```
 AEROAPI_API_KEY=<key>            # Required. Create at https://www.flightaware.com/aeroapi/portal/
-AEROAPI_OUTPUT_DIR=<dir>         # Optional. Where flight-map PNGs are written (default: cwd)
+AEROAPI_OUTPUT_DIR=<dir>         # Optional. Where flight-map PNGs are written (default: cwd); when set, confines per-call output_dir
 AEROAPI_CACHE_TTL=<secs>        # Optional. Live-data read-cache TTL (default 15; 0 disables)
 AEROAPI_STATIC_CACHE_TTL=<secs> # Optional. Reference-data read-cache TTL (default 3600; 0 disables)
 MCP_CONFIRM_MODE=<mode>         # Optional. ask-user|auto|refuse for writes on clients without prompts (default ask-user; unrecognised = refuse)
@@ -49,8 +49,8 @@ so the host's install-time `tools/list` probe still succeeds.
 - `src/client.ts` — `FlightAwareClient` (deferred config; `get()` reads via
   `createApiClient`; `write()` raw fetch for mutations + Location parsing).
 - `src/tools/shared.ts` — path-segment guards (`FlightIdent`/`AirportCode`/
-  `OperatorCode`/`AlertId`), pagination/date-window schemas, `qs()`, and the
-  map-PNG writer.
+  `OperatorCode`/`AlertId`), pagination/date-window schemas and `qs()`. The flight-map PNG is
+  written with mcp-utils' `resolveOutputDir` + `writeBinaryOutput`.
 - `src/tools/{flights,airports,operators,aircraft,schedules,alerts}.ts` — each
   exports `register*Tools(server)`; `index.ts` wires them via `runMcp`.
 
