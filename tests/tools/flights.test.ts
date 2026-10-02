@@ -59,6 +59,25 @@ describe('fa_get_flight_map file output', () => {
     }
   });
 
+  it('confines a per-call output_dir to $AEROAPI_OUTPUT_DIR once the operator sets it', async () => {
+    const root = mkdtempSync(join(tmpdir(), 'fa-root-'));
+    const elsewhere = mkdtempSync(join(tmpdir(), 'fa-else-'));
+    vi.stubEnv('AEROAPI_OUTPUT_DIR', root);
+    try {
+      expect(dirname(await saveMap({ output_dir: join(root, 'maps') }))).toBe(join(root, 'maps'));
+      vi.spyOn(client, 'get').mockResolvedValue({ map: png });
+      const h = await createTestHarness(registerFlightTools);
+      const res = await h.callTool('fa_get_flight_map', { id: ID, output_dir: elsewhere });
+      await h.close();
+      expect(res.isError).toBe(true);
+      expect(readdirSync(elsewhere)).toEqual([]);
+    } finally {
+      vi.unstubAllEnvs();
+      rmSync(root, { recursive: true, force: true });
+      rmSync(elsewhere, { recursive: true, force: true });
+    }
+  });
+
   it('falls back to $AEROAPI_OUTPUT_DIR when no output_dir is given', async () => {
     const dir = mkdtempSync(join(tmpdir(), 'fa-'));
     vi.stubEnv('AEROAPI_OUTPUT_DIR', dir);

@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { McpServer, CallToolResult } from '@modelcontextprotocol/server';
-import { McpToolError, minifiedResult, resolveOutputDir, writeBinaryOutput } from '@chrischall/mcp-utils';
+import { McpToolError, minifiedResult, readEnvVar, resolveOutputDir, writeBinaryOutput } from '@chrischall/mcp-utils';
 import { viewArg, viewResponse } from '../view.js';
 import { client } from '../client.js';
 import {
@@ -152,7 +152,7 @@ export function registerFlightTools(server: McpServer): void {
         output_dir: z
           .string()
           .optional()
-          .describe('Directory to write the PNG to (default: $AEROAPI_OUTPUT_DIR or cwd)'),
+          .describe('Directory to write the PNG to (default: $AEROAPI_OUTPUT_DIR or cwd). When AEROAPI_OUTPUT_DIR is set, this must be inside it.'),
         inline: z
           .boolean()
           .optional()
@@ -176,7 +176,14 @@ export function registerFlightTools(server: McpServer): void {
       }
       // arg → $AEROAPI_OUTPUT_DIR → cwd; the write is an exclusive, no-follow
       // create under a sanitized, never-overwriting name (flight-map-X-2.png …).
-      const dir = resolveOutputDir(output_dir, 'AEROAPI_OUTPUT_DIR');
+      // output_dir is model-chosen: once the operator sets AEROAPI_OUTPUT_DIR,
+      // a per-call directory must stay inside it (checked through symlinks).
+      // Unset keeps the old, unconfined behaviour (the fleet pattern, as in
+      // splitwise-mcp).
+      const configuredDir = readEnvVar('AEROAPI_OUTPUT_DIR');
+      const dir = resolveOutputDir(output_dir, 'AEROAPI_OUTPUT_DIR', {
+        ...(configuredDir ? { allowedRoots: [configuredDir] } : {}),
+      });
       const path = writeBinaryOutput({ dir, baseName: `flight-map-${id}`, base64, mimeType: 'image/png' });
       return minifiedResult({ map: path });
     },
