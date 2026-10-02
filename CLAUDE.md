@@ -49,8 +49,8 @@ so the host's install-time `tools/list` probe still succeeds.
 - `src/client.ts` — `FlightAwareClient` (deferred config; `get()` reads via
   `createApiClient`; `write()` raw fetch for mutations + Location parsing).
 - `src/tools/shared.ts` — path-segment guards (`FlightIdent`/`AirportCode`/
-  `OperatorCode`/`AlertId`), pagination/date-window schemas, `qs()`, and the
-  map-PNG writer.
+  `OperatorCode`/`AlertId`), pagination/date-window schemas and `qs()`. The flight-map PNG is
+  written with mcp-utils' `resolveOutputDir` + `writeBinaryOutput`.
 - `src/tools/{flights,airports,operators,aircraft,schedules,alerts}.ts` — each
   exports `register*Tools(server)`; `index.ts` wires them via `runMcp`.
 

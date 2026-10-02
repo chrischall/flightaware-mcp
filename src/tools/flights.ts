@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { McpServer, CallToolResult } from '@modelcontextprotocol/server';
-import { McpToolError, minifiedResult } from '@chrischall/mcp-utils';
+import { McpToolError, minifiedResult, resolveOutputDir, writeBinaryOutput } from '@chrischall/mcp-utils';
 import { viewArg, viewResponse } from '../view.js';
 import { client } from '../client.js';
 import {
@@ -8,8 +8,6 @@ import {
   pageParams,
   dateWindowParams,
   qs,
-  resolveOutputDir,
-  writePng,
 } from './shared.js';
 
 export function registerFlightTools(server: McpServer): void {
@@ -176,8 +174,10 @@ export function registerFlightTools(server: McpServer): void {
           content: [{ type: 'image', data: base64, mimeType: 'image/png' }],
         };
       }
-      const dir = resolveOutputDir(output_dir);
-      const path = writePng(dir, `flight-map-${id}`, base64);
+      // arg → $AEROAPI_OUTPUT_DIR → cwd; the write is an exclusive, no-follow
+      // create under a sanitized, never-overwriting name (flight-map-X-2.png …).
+      const dir = resolveOutputDir(output_dir, 'AEROAPI_OUTPUT_DIR');
+      const path = writeBinaryOutput({ dir, baseName: `flight-map-${id}`, base64, mimeType: 'image/png' });
       return minifiedResult({ map: path });
     },
   );
