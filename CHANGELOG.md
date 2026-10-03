@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.2.3](https://github.com/chrischall/flightaware-mcp/compare/v1.2.2...v1.2.3) (2026-10-03)
+
+
+### Bug Fixes
+
+* **deps:** adopt @chrischall/mcp-utils 2.12.0 output kit for flight-map PNGs ([#139](https://github.com/chrischall/flightaware-mcp/issues/139)) ([f37f69f](https://github.com/chrischall/flightaware-mcp/commit/f37f69fca78608599489514663bb43ab201b01e5))
+* **deps:** bump @chrischall/mcp-utils to 2.13.0 ([#140](https://github.com/chrischall/flightaware-mcp/issues/140)) ([2292cea](https://github.com/chrischall/flightaware-mcp/commit/2292ceaba47b7ab70d135d10c84a174e80ec7b93))
+* keep credentials and report edge_blocked on CDN/WAF blocks (mcp-utils 2.10.0) ([#137](https://github.com/chrischall/flightaware-mcp/issues/137)) ([0922732](https://github.com/chrischall/flightaware-mcp/commit/09227320a2d40db2ff87ccc99d707552266c1916))
+* keep write approvals valid across a hosted restart (mcp-utils 2.11.0) ([#138](https://github.com/chrischall/flightaware-mcp/issues/138)) ([f5b9593](https://github.com/chrischall/flightaware-mcp/commit/f5b9593f8153ed877b5fb497e3cc2e36336a51e5))
+* report CDN/WAF blocks as edge_blocked, not a rejected credential (mcp-utils 2.9.0) ([#135](https://github.com/chrischall/flightaware-mcp/issues/135)) ([966f2e0](https://github.com/chrischall/flightaware-mcp/commit/966f2e0e9545cc4577ccd5a9346df76bb0f3fff3))
+
 ## [1.2.2](https://github.com/chrischall/flightaware-mcp/compare/v1.2.1...v1.2.2) (2026-09-29)
 
 
