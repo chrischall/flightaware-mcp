@@ -26,6 +26,7 @@ AEROAPI_OUTPUT_DIR=<dir>         # Optional. Where flight-map PNGs are written (
 AEROAPI_CACHE_TTL=<secs>        # Optional. Live-data read-cache TTL (default 15; 0 disables)
 AEROAPI_STATIC_CACHE_TTL=<secs> # Optional. Reference-data read-cache TTL (default 3600; 0 disables)
 MCP_CONFIRM_MODE=<mode>         # Optional. ask-user|auto|refuse for writes on clients without prompts (default ask-user; unrecognised = refuse)
+MCP_CONFIRM_ELICITATION=off     # Optional. Never prompt; every client takes the MCP_CONFIRM_MODE path (for clients whose prompt never shows, e.g. opencode 2.0.x)
 MCP_CONFIRM_TTL_SECONDS=<secs>  # Optional. confirmToken lifetime (default 600)
 MCP_CONFIRM_SECRET=<secret>     # Optional. Token signing key (default random per process; set to survive restarts)
 ```
@@ -63,7 +64,7 @@ so the host's install-time `tools/list` probe still succeeds.
   `{ method, path, body }` plus a token and NO network call, and only a repeat
   call with that token routes through `client.write()`. The request is hashed
   into the token, so a changed argument is refused as `DRAFT_CHANGED`.
-  `MCP_CONFIRM_MODE` / `MCP_CONFIRM_TTL_SECONDS` / `MCP_CONFIRM_SECRET` tune it.
+  `MCP_CONFIRM_MODE` / `MCP_CONFIRM_ELICITATION` / `MCP_CONFIRM_TTL_SECONDS` / `MCP_CONFIRM_SECRET` tune it.
 - **Path-injection guards.** `ident`/`id`/codes are interpolated into the URL
   path, so their zod schemas restrict the charset (see `shared.ts`).
 - **Verify before trusting a shape.** Many response shapes are coded from the
