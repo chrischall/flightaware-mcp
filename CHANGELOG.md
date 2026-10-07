@@ -1,5 +1,23 @@
 # Changelog
 
+## [1.3.0](https://github.com/chrischall/flightaware-mcp/compare/v1.2.4...v1.3.0) (2026-10-07)
+
+
+### Features
+
+* **deps:** support MCP_CONFIRM_ELICITATION=off for alert confirmations (mcp-utils 2.15.0) ([#148](https://github.com/chrischall/flightaware-mcp/issues/148)) ([c170971](https://github.com/chrischall/flightaware-mcp/commit/c170971e0731949a0c4afd492b64cd201a91c2fa))
+
+
+### Bug Fixes
+
+* **deps:** Bump dotenv ([#145](https://github.com/chrischall/flightaware-mcp/issues/145)) ([04cf6ba](https://github.com/chrischall/flightaware-mcp/commit/04cf6ba6c7ca0ac21d297c010f303e5f37d7aa2a))
+
+
+### Documentation
+
+* document MCP_CONFIRM_ELICITATION ([#150](https://github.com/chrischall/flightaware-mcp/issues/150)) ([5e21b5f](https://github.com/chrischall/flightaware-mcp/commit/5e21b5f9547482ac206b9b1f5ddffd3176488c69))
+* use a value placeholder for MCP_CONFIRM_ELICITATION in CLAUDE.md ([#152](https://github.com/chrischall/flightaware-mcp/issues/152)) ([503a3be](https://github.com/chrischall/flightaware-mcp/commit/503a3be76570e60883752cb2765b949d27d72a71))
+
 ## [1.2.4](https://github.com/chrischall/flightaware-mcp/compare/v1.2.3...v1.2.4) (2026-10-05)
 
 
