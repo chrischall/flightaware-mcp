@@ -229,3 +229,16 @@ describe('alert tools — reads', () => {
     await h.close();
   });
 });
+
+describe('alert tools — annotations', () => {
+  it('every write tool sets destructiveHint explicitly: create is additive, update/delete/set-endpoint are not', async () => {
+    const h = await createTestHarness(registerAlertTools);
+    const { tools } = await h.client.listTools();
+    const hint = (name: string) => tools.find((t) => t.name === name)?.annotations;
+    expect(hint('fa_create_alert')).toMatchObject({ readOnlyHint: false, destructiveHint: false });
+    expect(hint('fa_update_alert')).toMatchObject({ readOnlyHint: false, destructiveHint: true });
+    expect(hint('fa_delete_alert')).toMatchObject({ readOnlyHint: false, destructiveHint: true });
+    expect(hint('fa_set_alerts_endpoint')).toMatchObject({ readOnlyHint: false, destructiveHint: true });
+    await h.close();
+  });
+});

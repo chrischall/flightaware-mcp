@@ -139,6 +139,7 @@ export function registerAlertTools(server: McpServer): void {
         'Create a flight alert on your AeroAPI account.' + CONFIRM + TIER,
       annotations: {
         readOnlyHint: false,
+        destructiveHint: false,
         idempotentHint: false,
         openWorldHint: true,
       },
@@ -172,6 +173,7 @@ export function registerAlertTools(server: McpServer): void {
         'Update an existing flight alert (replaces its configuration).' + CONFIRM + TIER,
       annotations: {
         readOnlyHint: false,
+        destructiveHint: true,
         idempotentHint: true,
         openWorldHint: true,
       },
@@ -210,6 +212,7 @@ export function registerAlertTools(server: McpServer): void {
         'Delete a flight alert by id.' + CONFIRM + TIER,
       annotations: {
         readOnlyHint: false,
+        destructiveHint: true,
         idempotentHint: true,
         openWorldHint: true,
       },
@@ -261,6 +264,7 @@ export function registerAlertTools(server: McpServer): void {
         'Set the delivery (webhook) endpoint AeroAPI POSTs alert notifications to.' + CONFIRM + TIER,
       annotations: {
         readOnlyHint: false,
+        destructiveHint: true,
         idempotentHint: true,
         openWorldHint: true,
       },
