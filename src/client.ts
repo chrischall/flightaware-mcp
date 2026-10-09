@@ -2,7 +2,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
   loadDotenvSafely,
-  readEnvVar,
+  requireEnvVar,
   readTtlMsEnv,
   createApiClient,
   createResponseCache,
@@ -58,15 +58,16 @@ export class FlightAwareClient {
     const cacheTtlMs = opts.cacheTtlMs ?? readTtlMsEnv('AEROAPI_CACHE_TTL', DEFAULT_CACHE_TTL_MS);
     const staticCacheTtlMs = opts.staticCacheTtlMs ?? readTtlMsEnv('AEROAPI_STATIC_CACHE_TTL', DEFAULT_STATIC_CACHE_TTL_MS);
     this.cache = createResponseCache({ ttlMs: { dynamic: cacheTtlMs, static: staticCacheTtlMs }, now });
-    const key = readEnvVar('AEROAPI_API_KEY');
-    if (!key) {
+    // The key is required to do anything, so it is read with requireEnvVar —
+    // but its throw is captured and re-raised per call (see above), not at boot.
+    try {
+      this.apiKey = requireEnvVar('AEROAPI_API_KEY');
+      this.configError = null;
+    } catch {
       this.apiKey = null;
       this.configError = new McpToolError('AEROAPI_API_KEY environment variable is required', {
         hint: 'Create an AeroAPI key at https://www.flightaware.com/aeroapi/portal/ and set AEROAPI_API_KEY in your MCP host env or .env (free Personal tier is fine to start).',
       });
-    } else {
-      this.apiKey = key;
-      this.configError = null;
     }
     // AeroAPI authenticates with the `x-apikey` header (NOT Authorization:
     // Bearer), so we pass tokenHeader. getToken defers the config error to
