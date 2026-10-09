@@ -14,15 +14,16 @@ search, and flight-alert management.
 Auth is an AeroAPI key (`AEROAPI_API_KEY`) sent in the **`x-apikey`** header —
 AeroAPI does **not** use `Authorization: Bearer`. This is the bearer/direct-API
 archetype: reads go through the fleet-shared `createApiClient` (configured with
-a non-Bearer `tokenHeader`); mutations go through a small raw-`fetch` `write()`
-because AeroAPI returns the new-resource id in the `Location` header on create
-and an empty body on delete (neither fits a JSON-only client). No fetchproxy.
+a non-Bearer `tokenHeader`); mutations go through `write()`, which uses the same
+client's `fetchRaw` because AeroAPI returns the new-resource id in the `Location`
+header on create and an empty body on delete (neither fits a JSON-only client) —
+so writes share the timeout, cancellation, 429 retry and 401/429 messages. No fetchproxy.
 
 ## Environment
 
 ```
 AEROAPI_API_KEY=<key>            # Required. Create at https://www.flightaware.com/aeroapi/portal/
-AEROAPI_OUTPUT_DIR=<dir>         # Optional. Where flight-map PNGs are written (default: cwd); when set, confines per-call output_dir
+AEROAPI_OUTPUT_DIR=<dir>         # Optional. Where flight-map PNGs are written (default: <tmpdir>/flightaware-mcp); when set, confines per-call output_dir
 AEROAPI_CACHE_TTL=<secs>        # Optional. Live-data read-cache TTL (default 15; 0 disables)
 AEROAPI_STATIC_CACHE_TTL=<secs> # Optional. Reference-data read-cache TTL (default 3600; 0 disables)
 MCP_CONFIRM_MODE=<mode>         # Optional. ask-user|auto|refuse for writes on clients without prompts (default ask-user; unrecognised = refuse)
@@ -37,7 +38,7 @@ path, with two TTL tiers to cut AeroAPI's per-query billing: **dynamic**
 (`AEROAPI_STATIC_CACHE_TTL`, default 3600s) for reference data that barely
 changes — opted in per tool via `get(path, { cache: 'static' })` (airport/
 operator info, `fa_list_*`, routes, aircraft owner, `fa_resolve_*`). Writes are
-never cached. Tier note: alerts, `fa_get_flight_history`, and the `fa_resolve_*`
+never cached, and a successful write clears the cache so a follow-up read is fresh. Tier note: alerts, `fa_get_flight_history`, and the `fa_resolve_*`
 canonical tools require a Standard/Premium tier (Personal 401s).
 
 Loaded via `loadDotenvSafely` from `.env` next to `dist/` (failure swallowed —
@@ -48,7 +49,7 @@ so the host's install-time `tools/list` probe still succeeds.
 ## Layout
 
 - `src/client.ts` — `FlightAwareClient` (deferred config; `get()` reads via
-  `createApiClient`; `write()` raw fetch for mutations + Location parsing).
+  `createApiClient`; `write()` mutations via `fetchRaw` + Location parsing).
 - `src/tools/shared.ts` — path-segment guards (`FlightIdent`/`AirportCode`/
   `OperatorCode`/`AlertId`), pagination/date-window schemas and `qs()`. The flight-map PNG is
   written with mcp-utils' `resolveOutputDir` + `writeBinaryOutput`.

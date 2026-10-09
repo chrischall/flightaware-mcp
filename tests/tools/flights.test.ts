@@ -89,6 +89,21 @@ describe('fa_get_flight_map file output', () => {
       rmSync(dir, { recursive: true, force: true });
     }
   });
+
+  it('defaults to a flightaware-mcp dir under the OS temp dir, not cwd (desktop hosts spawn with cwd "/")', async () => {
+    vi.stubEnv('AEROAPI_OUTPUT_DIR', '');
+    const cwd = vi.spyOn(process, 'cwd').mockReturnValue('/');
+    let p = '';
+    try {
+      p = await saveMap({});
+      expect(dirname(p)).toBe(join(tmpdir(), 'flightaware-mcp'));
+      expect(existsSync(p)).toBe(true);
+    } finally {
+      cwd.mockRestore();
+      vi.unstubAllEnvs();
+      if (p) rmSync(p, { force: true });
+    }
+  });
 });
 
 describe('flight tools', () => {
@@ -205,6 +220,15 @@ describe('flight tools', () => {
     const get = vi.spyOn(client, 'get').mockResolvedValue({});
     const h = await createTestHarness(registerFlightTools);
     const res = await h.callTool('fa_get_flights', { ident: '../airports/KJFK' });
+    expect(res.isError).toBe(true);
+    expect(get).not.toHaveBeenCalled();
+    await h.close();
+  });
+
+  it("rejects a bare '..' id, which fetch would normalise /flights/../track into /track", async () => {
+    const get = vi.spyOn(client, 'get').mockResolvedValue({});
+    const h = await createTestHarness(registerFlightTools);
+    const res = await h.callTool('fa_get_flight_track', { id: '..' });
     expect(res.isError).toBe(true);
     expect(get).not.toHaveBeenCalled();
     await h.close();

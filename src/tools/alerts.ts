@@ -17,7 +17,7 @@ const TIER = ' Requires a Standard or Premium AeroAPI tier (the free Personal ti
 
 // How every alert mutation asks before it writes, appended to its description.
 const CONFIRM =
-  ' Asks the user to confirm first: a confirmation prompt where the client supports one; otherwise the first call returns a preview of the request (method, path, body) and a confirmToken, makes NO network call, and only a repeat call with that token proceeds (see MCP_CONFIRM_MODE).';
+  ' Asks the user to confirm first: a confirmation prompt where the client supports one (unless the server sets MCP_CONFIRM_ELICITATION=off); otherwise the first call returns a preview of the request (method, path, body) and a confirmToken, makes NO network call, and only a repeat call with that token proceeds (see MCP_CONFIRM_MODE).';
 
 /** The mutable fields of a flight alert (shared by create + update). */
 const alertConfigSchema = {
@@ -139,6 +139,7 @@ export function registerAlertTools(server: McpServer): void {
         'Create a flight alert on your AeroAPI account.' + CONFIRM + TIER,
       annotations: {
         readOnlyHint: false,
+        destructiveHint: false,
         idempotentHint: false,
         openWorldHint: true,
       },
@@ -172,6 +173,7 @@ export function registerAlertTools(server: McpServer): void {
         'Update an existing flight alert (replaces its configuration).' + CONFIRM + TIER,
       annotations: {
         readOnlyHint: false,
+        destructiveHint: true,
         idempotentHint: true,
         openWorldHint: true,
       },
@@ -210,6 +212,7 @@ export function registerAlertTools(server: McpServer): void {
         'Delete a flight alert by id.' + CONFIRM + TIER,
       annotations: {
         readOnlyHint: false,
+        destructiveHint: true,
         idempotentHint: true,
         openWorldHint: true,
       },
@@ -261,11 +264,18 @@ export function registerAlertTools(server: McpServer): void {
         'Set the delivery (webhook) endpoint AeroAPI POSTs alert notifications to.' + CONFIRM + TIER,
       annotations: {
         readOnlyHint: false,
+        destructiveHint: true,
         idempotentHint: true,
         openWorldHint: true,
       },
       inputSchema: z.object({
-        url: z.string().url().describe('HTTPS URL AeroAPI will POST alert payloads to'),
+        // Every alert notification (flight/itinerary data) goes here, so only
+        // an encrypted https: endpoint is accepted — not http: or other schemes.
+        url: z
+          .string()
+          .url()
+          .refine((u) => new URL(u).protocol === 'https:', { message: 'must be an https:// URL' })
+          .describe('HTTPS URL AeroAPI will POST alert payloads to (https:// only)'),
         format: z.enum(['json', 'json/post', 'xml']).optional().describe('Delivery payload format'),
         confirmToken: confirmTokenParam,
       }),

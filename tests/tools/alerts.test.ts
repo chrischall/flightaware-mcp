@@ -117,6 +117,17 @@ describe('alert tools — confirm-token gating (client without elicitation)', ()
     await h.close();
   });
 
+  it('fa_set_alerts_endpoint refuses a non-HTTPS delivery URL before previewing or writing', async () => {
+    const write = vi.spyOn(client, 'write').mockResolvedValue({ status: 200, data: {} });
+    const h = await createTestHarness(registerAlertTools);
+    for (const url of ['http://example.com/hook', 'ftp://example.com/hook', 'javascript:alert(1)']) {
+      const res = await h.callTool('fa_set_alerts_endpoint', { url });
+      expect(res.isError, url).toBe(true);
+    }
+    expect(write).not.toHaveBeenCalled();
+    await h.close();
+  });
+
   it('fa_set_alerts_endpoint omits format from the body when not given', async () => {
     const write = vi.spyOn(client, 'write').mockResolvedValue({ status: 200, data: {} });
     const h = await createTestHarness(registerAlertTools);
@@ -226,6 +237,19 @@ describe('alert tools — reads', () => {
     const h = await createTestHarness(registerAlertTools);
     await h.callTool('fa_list_alerts', {});
     expect(get.mock.calls[0][0]).toMatch(/^\/alerts/);
+    await h.close();
+  });
+});
+
+describe('alert tools — annotations', () => {
+  it('every write tool sets destructiveHint explicitly: create is additive, update/delete/set-endpoint are not', async () => {
+    const h = await createTestHarness(registerAlertTools);
+    const { tools } = await h.client.listTools();
+    const hint = (name: string) => tools.find((t) => t.name === name)?.annotations;
+    expect(hint('fa_create_alert')).toMatchObject({ readOnlyHint: false, destructiveHint: false });
+    expect(hint('fa_update_alert')).toMatchObject({ readOnlyHint: false, destructiveHint: true });
+    expect(hint('fa_delete_alert')).toMatchObject({ readOnlyHint: false, destructiveHint: true });
+    expect(hint('fa_set_alerts_endpoint')).toMatchObject({ readOnlyHint: false, destructiveHint: true });
     await h.close();
   });
 });

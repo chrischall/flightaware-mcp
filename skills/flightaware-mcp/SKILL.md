@@ -45,7 +45,7 @@ npm install && npm run build
 | Var | Required | Purpose |
 | --- | --- | --- |
 | `AEROAPI_API_KEY` | yes | Your FlightAware AeroAPI key (sent as the `x-apikey` header). |
-| `AEROAPI_OUTPUT_DIR` | no | Default directory for flight-map PNGs (default: cwd). |
+| `AEROAPI_OUTPUT_DIR` | no | Default directory for flight-map PNGs (default: `<OS temp dir>/flightaware-mcp`). |
 | `AEROAPI_CACHE_TTL` | no | Seconds to cache identical **live-data** GET responses to cut per-query billing (default: 15; `0` disables). |
 | `AEROAPI_STATIC_CACHE_TTL` | no | Longer TTL for **reference data** that rarely changes — airport/operator info, routes, ownership, canonical lookups (default: 3600; `0` disables). |
 
@@ -62,7 +62,7 @@ rung when you omit it — see [Response shape](#response-shape-view).
 
 **Schedules / predictive:** `fa_get_scheduled_flights`, `fa_foresight_search` (Foresight is a premium tier — expect a 402/403 on a Personal key)
 
-**Alerts** (account-mutating writes ask the user to confirm first — a confirmation prompt where the client supports one; otherwise the first call makes no network call and returns a preview plus a `confirmToken`, and only a repeat call with that token, after the user approves, performs the write): `fa_list_alerts`, `fa_get_alert`, `fa_create_alert`, `fa_update_alert`, `fa_delete_alert`, `fa_get_alerts_endpoint`, `fa_set_alerts_endpoint`
+**Alerts** (account-mutating writes ask the user to confirm first — a confirmation prompt where the client supports one (unless the server sets `MCP_CONFIRM_ELICITATION=off`); otherwise the first call makes no network call and returns a preview plus a `confirmToken`, and only a repeat call with that token, after the user approves, performs the write): `fa_list_alerts`, `fa_get_alert`, `fa_create_alert`, `fa_update_alert`, `fa_delete_alert`, `fa_get_alerts_endpoint`, `fa_set_alerts_endpoint`
 
 ## Response shape (`view`)
 
