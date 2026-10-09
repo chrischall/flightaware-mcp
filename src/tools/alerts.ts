@@ -269,7 +269,13 @@ export function registerAlertTools(server: McpServer): void {
         openWorldHint: true,
       },
       inputSchema: z.object({
-        url: z.string().url().describe('HTTPS URL AeroAPI will POST alert payloads to'),
+        // Every alert notification (flight/itinerary data) goes here, so only
+        // an encrypted https: endpoint is accepted — not http: or other schemes.
+        url: z
+          .string()
+          .url()
+          .refine((u) => new URL(u).protocol === 'https:', { message: 'must be an https:// URL' })
+          .describe('HTTPS URL AeroAPI will POST alert payloads to (https:// only)'),
         format: z.enum(['json', 'json/post', 'xml']).optional().describe('Delivery payload format'),
         confirmToken: confirmTokenParam,
       }),

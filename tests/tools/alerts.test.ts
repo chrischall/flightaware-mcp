@@ -117,6 +117,17 @@ describe('alert tools — confirm-token gating (client without elicitation)', ()
     await h.close();
   });
 
+  it('fa_set_alerts_endpoint refuses a non-HTTPS delivery URL before previewing or writing', async () => {
+    const write = vi.spyOn(client, 'write').mockResolvedValue({ status: 200, data: {} });
+    const h = await createTestHarness(registerAlertTools);
+    for (const url of ['http://example.com/hook', 'ftp://example.com/hook', 'javascript:alert(1)']) {
+      const res = await h.callTool('fa_set_alerts_endpoint', { url });
+      expect(res.isError, url).toBe(true);
+    }
+    expect(write).not.toHaveBeenCalled();
+    await h.close();
+  });
+
   it('fa_set_alerts_endpoint omits format from the body when not given', async () => {
     const write = vi.spyOn(client, 'write').mockResolvedValue({ status: 200, data: {} });
     const h = await createTestHarness(registerAlertTools);
