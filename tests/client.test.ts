@@ -195,6 +195,32 @@ describe('FlightAwareClient', () => {
     await expect(c.write('POST', '/alerts', {})).rejects.toThrow(/timed out|timeout/i);
   });
 
+  it('a successful write invalidates cached reads, so a read right after a mutation is fresh', async () => {
+    let n = 0;
+    const fetchImpl = vi.fn(async (_url: string, init?: RequestInit) =>
+      init?.method === 'DELETE'
+        ? new Response(null, { status: 204 })
+        : new Response(JSON.stringify({ n: ++n }), { status: 200, headers: { 'content-type': 'application/json' } }),
+    );
+    const c = new FlightAwareClient({ fetchImpl: fetchImpl as unknown as typeof fetch, cacheTtlMs: 60_000 });
+    expect(await c.get('/alerts')).toEqual({ n: 1 });
+    await c.write('DELETE', '/alerts/5');
+    expect(await c.get('/alerts')).toEqual({ n: 2 });
+  });
+
+  it('a failed write leaves the cache intact', async () => {
+    let n = 0;
+    const fetchImpl = vi.fn(async (_url: string, init?: RequestInit) =>
+      init?.method === 'PUT'
+        ? new Response('{"title":"bad"}', { status: 400 })
+        : new Response(JSON.stringify({ n: ++n }), { status: 200, headers: { 'content-type': 'application/json' } }),
+    );
+    const c = new FlightAwareClient({ fetchImpl: fetchImpl as unknown as typeof fetch, cacheTtlMs: 60_000 });
+    await c.get('/alerts');
+    await expect(c.write('PUT', '/alerts/5', {})).rejects.toThrow();
+    expect(await c.get('/alerts')).toEqual({ n: 1 });
+  });
+
   it('defers the config error: no key boots, but a call rejects with an actionable hint', async () => {
     delete process.env.AEROAPI_API_KEY;
     const fetchImpl = vi.fn();

@@ -122,6 +122,10 @@ export class FlightAwareClient {
    */
   async write<T = unknown>(method: 'POST' | 'PUT' | 'DELETE', path: string, body?: unknown): Promise<WriteResult<T>> {
     const res = await this.api.fetchRaw(method, path, body !== undefined ? { body } : {});
+    // A write changes what /alerts* reads return; drop the cache so a read
+    // right after a mutation isn't served the pre-write state. Writes are rare,
+    // so clearing everything (the cache has no prefix eviction) costs little.
+    this.cache.clear();
     const text = new TextDecoder().decode(res.bytes);
     const location = res.headers.get('location') ?? undefined;
     const locationId = location ? location.split('/').filter(Boolean).pop() : undefined;

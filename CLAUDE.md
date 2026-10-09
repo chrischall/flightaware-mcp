@@ -38,7 +38,7 @@ path, with two TTL tiers to cut AeroAPI's per-query billing: **dynamic**
 (`AEROAPI_STATIC_CACHE_TTL`, default 3600s) for reference data that barely
 changes — opted in per tool via `get(path, { cache: 'static' })` (airport/
 operator info, `fa_list_*`, routes, aircraft owner, `fa_resolve_*`). Writes are
-never cached. Tier note: alerts, `fa_get_flight_history`, and the `fa_resolve_*`
+never cached, and a successful write clears the cache so a follow-up read is fresh. Tier note: alerts, `fa_get_flight_history`, and the `fa_resolve_*`
 canonical tools require a Standard/Premium tier (Personal 401s).
 
 Loaded via `loadDotenvSafely` from `.env` next to `dist/` (failure swallowed —
