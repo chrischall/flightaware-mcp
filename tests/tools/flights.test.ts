@@ -89,6 +89,21 @@ describe('fa_get_flight_map file output', () => {
       rmSync(dir, { recursive: true, force: true });
     }
   });
+
+  it('defaults to a flightaware-mcp dir under the OS temp dir, not cwd (desktop hosts spawn with cwd "/")', async () => {
+    vi.stubEnv('AEROAPI_OUTPUT_DIR', '');
+    const cwd = vi.spyOn(process, 'cwd').mockReturnValue('/');
+    let p = '';
+    try {
+      p = await saveMap({});
+      expect(dirname(p)).toBe(join(tmpdir(), 'flightaware-mcp'));
+      expect(existsSync(p)).toBe(true);
+    } finally {
+      cwd.mockRestore();
+      vi.unstubAllEnvs();
+      if (p) rmSync(p, { force: true });
+    }
+  });
 });
 
 describe('flight tools', () => {
