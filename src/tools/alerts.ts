@@ -17,7 +17,7 @@ const TIER = ' Requires a Standard or Premium AeroAPI tier (the free Personal ti
 
 // How every alert mutation asks before it writes, appended to its description.
 const CONFIRM =
-  ' Asks the user to confirm first: a confirmation prompt where the client supports one; otherwise the first call returns a preview of the request (method, path, body) and a confirmToken, makes NO network call, and only a repeat call with that token proceeds (see MCP_CONFIRM_MODE).';
+  ' Asks the user to confirm first: a confirmation prompt where the client supports one (unless the server sets MCP_CONFIRM_ELICITATION=off); otherwise the first call returns a preview of the request (method, path, body) and a confirmToken, makes NO network call, and only a repeat call with that token proceeds (see MCP_CONFIRM_MODE).';
 
 /** The mutable fields of a flight alert (shared by create + update). */
 const alertConfigSchema = {
