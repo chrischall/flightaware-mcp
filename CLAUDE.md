@@ -14,9 +14,10 @@ search, and flight-alert management.
 Auth is an AeroAPI key (`AEROAPI_API_KEY`) sent in the **`x-apikey`** header —
 AeroAPI does **not** use `Authorization: Bearer`. This is the bearer/direct-API
 archetype: reads go through the fleet-shared `createApiClient` (configured with
-a non-Bearer `tokenHeader`); mutations go through a small raw-`fetch` `write()`
-because AeroAPI returns the new-resource id in the `Location` header on create
-and an empty body on delete (neither fits a JSON-only client). No fetchproxy.
+a non-Bearer `tokenHeader`); mutations go through `write()`, which uses the same
+client's `fetchRaw` because AeroAPI returns the new-resource id in the `Location`
+header on create and an empty body on delete (neither fits a JSON-only client) —
+so writes share the timeout, cancellation, 429 retry and 401/429 messages. No fetchproxy.
 
 ## Environment
 
@@ -48,7 +49,7 @@ so the host's install-time `tools/list` probe still succeeds.
 ## Layout
 
 - `src/client.ts` — `FlightAwareClient` (deferred config; `get()` reads via
-  `createApiClient`; `write()` raw fetch for mutations + Location parsing).
+  `createApiClient`; `write()` mutations via `fetchRaw` + Location parsing).
 - `src/tools/shared.ts` — path-segment guards (`FlightIdent`/`AirportCode`/
   `OperatorCode`/`AlertId`), pagination/date-window schemas and `qs()`. The flight-map PNG is
   written with mcp-utils' `resolveOutputDir` + `writeBinaryOutput`.

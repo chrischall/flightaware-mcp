@@ -6,7 +6,6 @@ import {
   readTtlMsEnv,
   createApiClient,
   createResponseCache,
-  formatApiError,
   McpToolError,
   type ApiClient,
   type ResponseCache,
@@ -46,7 +45,6 @@ export class FlightAwareClient {
   private readonly apiKey: string | null;
   private readonly configError: Error | null;
   private readonly api: ApiClient;
-  private readonly fetchImpl: typeof fetch;
   private readonly cache: ResponseCache;
 
   /**
@@ -54,7 +52,7 @@ export class FlightAwareClient {
    * install-time tools/list probe) when AEROAPI_API_KEY isn't set yet. The
    * error is re-raised at request time via requireKey().
    */
-  constructor(opts: { fetchImpl?: typeof fetch; cacheTtlMs?: number; staticCacheTtlMs?: number; now?: () => number } = {}) {
+  constructor(opts: { fetchImpl?: typeof fetch; cacheTtlMs?: number; staticCacheTtlMs?: number; now?: () => number; timeoutMs?: number } = {}) {
     const now = opts.now ?? Date.now;
     const cacheTtlMs = opts.cacheTtlMs ?? readTtlMsEnv('AEROAPI_CACHE_TTL', DEFAULT_CACHE_TTL_MS);
     const staticCacheTtlMs = opts.staticCacheTtlMs ?? readTtlMsEnv('AEROAPI_STATIC_CACHE_TTL', DEFAULT_STATIC_CACHE_TTL_MS);
@@ -69,7 +67,6 @@ export class FlightAwareClient {
       this.apiKey = key;
       this.configError = null;
     }
-    this.fetchImpl = opts.fetchImpl ?? fetch;
     // AeroAPI authenticates with the `x-apikey` header (NOT Authorization:
     // Bearer), so we pass tokenHeader. getToken defers the config error to
     // request time. retry once on 429; on* handlers keep actionable messages.
@@ -78,9 +75,9 @@ export class FlightAwareClient {
       serviceName: SERVICE,
       tokenHeader: 'x-apikey',
       getToken: () => this.requireKey(),
-      timeout: REQUEST_TIMEOUT_MS,
+      timeout: opts.timeoutMs ?? REQUEST_TIMEOUT_MS,
       retry: { count: 1, delayMs: 1000 },
-      fetchImpl: this.fetchImpl,
+      fetchImpl: opts.fetchImpl ?? fetch,
       // AeroAPI returns 401 for BOTH an invalid key AND a valid key hitting an
       // endpoint above its subscription tier (alerts and historical data need
       // the Standard/Premium tier — the free Personal tier 401s them with a
@@ -116,24 +113,16 @@ export class FlightAwareClient {
   }
 
   /**
-   * Mutating call (POST/PUT/DELETE). Routed through raw fetch (not fetchJson)
-   * because AeroAPI returns the new-resource id in the `Location` header on
-   * create and an empty body on delete — neither fits a JSON-only client.
-   * Auth (x-apikey) is attached centrally here so no tool builds it by hand.
+   * Mutating call (POST/PUT/DELETE). Routed through the shared client's
+   * `fetchRaw` (not fetchJson) because AeroAPI returns the new-resource id in
+   * the `Location` header on create and an empty body on delete — neither fits
+   * a JSON-only client. Going through the shared client gives writes the same
+   * x-apikey auth, request timeout, tool-call cancellation, 429 retry and
+   * tier-aware 401 / rate-limit messages as reads.
    */
   async write<T = unknown>(method: 'POST' | 'PUT' | 'DELETE', path: string, body?: unknown): Promise<WriteResult<T>> {
-    const key = this.requireKey();
-    const headers: Record<string, string> = { 'x-apikey': key };
-    let payload: string | undefined;
-    if (body !== undefined) {
-      headers['Content-Type'] = 'application/json; charset=UTF-8';
-      payload = JSON.stringify(body);
-    }
-    const res = await this.fetchImpl(`${BASE_URL}${path}`, { method, headers, body: payload });
-    const text = await res.text();
-    if (!res.ok) {
-      throw new McpToolError(formatApiError(res.status, method, path, text, { service: SERVICE }));
-    }
+    const res = await this.api.fetchRaw(method, path, body !== undefined ? { body } : {});
+    const text = new TextDecoder().decode(res.bytes);
     const location = res.headers.get('location') ?? undefined;
     const locationId = location ? location.split('/').filter(Boolean).pop() : undefined;
     let data: T | undefined;
