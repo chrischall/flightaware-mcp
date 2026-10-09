@@ -90,18 +90,19 @@ describe('fa_get_flight_map file output', () => {
     }
   });
 
-  it('defaults to a flightaware-mcp dir under the OS temp dir, not cwd (desktop hosts spawn with cwd "/")', async () => {
+  it('defaults to ~/Downloads/flightaware-mcp, not cwd (desktop hosts spawn with cwd "/")', async () => {
+    const home = mkdtempSync(join(tmpdir(), 'fa-home-'));
     vi.stubEnv('AEROAPI_OUTPUT_DIR', '');
+    vi.stubEnv('HOME', home);
     const cwd = vi.spyOn(process, 'cwd').mockReturnValue('/');
-    let p = '';
     try {
-      p = await saveMap({});
-      expect(dirname(p)).toBe(join(tmpdir(), 'flightaware-mcp'));
+      const p = await saveMap({});
+      expect(dirname(p)).toBe(join(home, 'Downloads', 'flightaware-mcp'));
       expect(existsSync(p)).toBe(true);
     } finally {
       cwd.mockRestore();
       vi.unstubAllEnvs();
-      if (p) rmSync(p, { force: true });
+      rmSync(home, { recursive: true, force: true });
     }
   });
 });

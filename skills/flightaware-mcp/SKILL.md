@@ -45,7 +45,7 @@ npm install && npm run build
 | Var | Required | Purpose |
 | --- | --- | --- |
 | `AEROAPI_API_KEY` | yes | Your FlightAware AeroAPI key (sent as the `x-apikey` header). |
-| `AEROAPI_OUTPUT_DIR` | no | Default directory for flight-map PNGs (default: `<OS temp dir>/flightaware-mcp`). |
+| `AEROAPI_OUTPUT_DIR` | no | Default directory for flight-map PNGs (default: `~/Downloads/flightaware-mcp`). |
 | `AEROAPI_CACHE_TTL` | no | Seconds to cache identical **live-data** GET responses to cut per-query billing (default: 15; `0` disables). |
 | `AEROAPI_STATIC_CACHE_TTL` | no | Longer TTL for **reference data** that rarely changes — airport/operator info, routes, ownership, canonical lookups (default: 3600; `0` disables). |
 

@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { WriteOutcomeUnknownError, withCallSignal } from '@chrischall/mcp-utils';
 import { FlightAwareClient } from '../src/client.js';
 
 const KEY = 'aero-test-key';
@@ -192,7 +193,49 @@ describe('FlightAwareClient', () => {
         }),
     );
     const c = new FlightAwareClient({ fetchImpl: fetchImpl as unknown as typeof fetch, timeoutMs: 20 });
-    await expect(c.write('POST', '/alerts', {})).rejects.toThrow(/timed out|timeout/i);
+    const err = await c.write('POST', '/alerts', {}).catch((e: unknown) => e);
+    // A timed-out write may still have landed upstream: mcp-utils 3 reports it as
+    // outcome-unknown (not a retry-safe RequestTimeoutError) so the model does
+    // not blindly re-create the alert.
+    expect(err).toBeInstanceOf(WriteOutcomeUnknownError);
+    expect((err as WriteOutcomeUnknownError).retrySafe).toBe(false);
+    expect((err as Error).message).toMatch(/timed out|timeout/i);
+  });
+
+  it('concurrent identical GETs share ONE billed AeroAPI request (single-flight)', async () => {
+    let release!: () => void;
+    const gate = new Promise<void>((r) => (release = r));
+    const fetchImpl = vi.fn(async () => {
+      await gate;
+      return new Response(JSON.stringify({ n: 1 }), { status: 200, headers: { 'content-type': 'application/json' } });
+    });
+    const c = new FlightAwareClient({ fetchImpl: fetchImpl as unknown as typeof fetch });
+    const all = Promise.all([c.get('/airports/KJFK'), c.get('/airports/KJFK'), c.get('/airports/KJFK')]);
+    release();
+    expect(await all).toEqual([{ n: 1 }, { n: 1 }, { n: 1 }]);
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+  });
+
+  it("one caller cancelling a shared GET does not fail the others joined to it", async () => {
+    const fetchImpl = vi.fn(
+      (_url: string, init?: RequestInit) =>
+        new Promise<Response>((resolve, reject) => {
+          const signal = init?.signal;
+          signal?.addEventListener('abort', () => reject(signal.reason));
+          setTimeout(
+            () => resolve(new Response(JSON.stringify({ ok: true }), { status: 200, headers: { 'content-type': 'application/json' } })),
+            20,
+          );
+        }),
+    );
+    const c = new FlightAwareClient({ fetchImpl: fetchImpl as unknown as typeof fetch });
+    const leaderCtl = new AbortController();
+    const waiterCtl = new AbortController();
+    const leader = withCallSignal(leaderCtl.signal, () => c.get('/flights/UAL1'));
+    const waiter = withCallSignal(waiterCtl.signal, () => c.get('/flights/UAL1'));
+    leaderCtl.abort(new Error('cancelled by client'));
+    await expect(leader).rejects.toThrow(/cancelled by client/);
+    await expect(waiter).resolves.toEqual({ ok: true });
   });
 
   it('a successful write invalidates cached reads, so a read right after a mutation is fresh', async () => {

@@ -23,7 +23,7 @@ so writes share the timeout, cancellation, 429 retry and 401/429 messages. No fe
 
 ```
 AEROAPI_API_KEY=<key>            # Required. Create at https://www.flightaware.com/aeroapi/portal/
-AEROAPI_OUTPUT_DIR=<dir>         # Optional. Where flight-map PNGs are written (default: <tmpdir>/flightaware-mcp); when set, confines per-call output_dir
+AEROAPI_OUTPUT_DIR=<dir>         # Optional. Where flight-map PNGs are written (default: ~/Downloads/flightaware-mcp); when set, confines per-call output_dir
 AEROAPI_CACHE_TTL=<secs>        # Optional. Live-data read-cache TTL (default 15; 0 disables)
 AEROAPI_STATIC_CACHE_TTL=<secs> # Optional. Reference-data read-cache TTL (default 3600; 0 disables)
 MCP_CONFIRM_MODE=<mode>         # Optional. ask-user|auto|refuse for writes on clients without prompts (default ask-user; unrecognised = refuse)
