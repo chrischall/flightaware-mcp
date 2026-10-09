@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.3.1](https://github.com/chrischall/flightaware-mcp/compare/v1.3.0...v1.3.1) (2026-10-09)
+
+
+### Bug Fixes
+
+* annotate tools truthfully and sync manifests with the served tools ([#156](https://github.com/chrischall/flightaware-mcp/issues/156)) ([3fe7cdb](https://github.com/chrischall/flightaware-mcp/commit/3fe7cdba947ccc259cf13188577ffbfbb78bd3fc))
+* declare the plugin MCP config under the mcpServers key Claude Code reads ([#157](https://github.com/chrischall/flightaware-mcp/issues/157)) ([1dc176b](https://github.com/chrischall/flightaware-mcp/commit/1dc176b7239387e522a00dac89a0de2fa3e04463))
+* **deps:** update @chrischall/mcp-utils to 3.0.0 ([#155](https://github.com/chrischall/flightaware-mcp/issues/155)) ([a4d71c8](https://github.com/chrischall/flightaware-mcp/commit/a4d71c818f4e17e64e8b05e507d7bf8c63eb928f))
+* resolve low-severity audit findings ([#153](https://github.com/chrischall/flightaware-mcp/issues/153)) ([ee6a13a](https://github.com/chrischall/flightaware-mcp/commit/ee6a13a9932e6b79376a44ab2afea762c27e7bcd))
+
 ## [1.3.0](https://github.com/chrischall/flightaware-mcp/compare/v1.2.4...v1.3.0) (2026-10-07)
 
 
