@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { pageParams, qs } from '../../src/tools/shared.js';
+import { FlightIdent, pageParams, qs } from '../../src/tools/shared.js';
 
 describe('pageParams.max_pages', () => {
   it('accepts a small, in-range page count', () => {
@@ -41,5 +41,19 @@ describe('cursor handling', () => {
   it('describes the cursor as the links.next cursor value, accepting the whole link', () => {
     expect(pageParams.cursor.description).toMatch(/links\.next/);
     expect(pageParams.cursor.description).toMatch(/cursor query parameter|whole links\.next/i);
+  });
+});
+
+describe('FlightIdent path-segment guard', () => {
+  it('accepts real idents, registrations and fa_flight_ids', () => {
+    for (const ok of ['UAL123', 'N12345', 'UAL123-1700000000-airline-0123', 'C-GABC', 'A.B']) {
+      expect(FlightIdent.safeParse(ok).success, ok).toBe(true);
+    }
+  });
+
+  it('rejects dot segments, which fetch would normalise into a different AeroAPI endpoint', () => {
+    for (const bad of ['.', '..', '...', '.UAL123', '-x']) {
+      expect(FlightIdent.safeParse(bad).success, bad).toBe(false);
+    }
   });
 });

@@ -224,4 +224,13 @@ describe('flight tools', () => {
     expect(get).not.toHaveBeenCalled();
     await h.close();
   });
+
+  it("rejects a bare '..' id, which fetch would normalise /flights/../track into /track", async () => {
+    const get = vi.spyOn(client, 'get').mockResolvedValue({});
+    const h = await createTestHarness(registerFlightTools);
+    const res = await h.callTool('fa_get_flight_track', { id: '..' });
+    expect(res.isError).toBe(true);
+    expect(get).not.toHaveBeenCalled();
+    await h.close();
+  });
 });

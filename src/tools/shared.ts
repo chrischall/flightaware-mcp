@@ -5,15 +5,17 @@ import { buildQueryString } from '@chrischall/mcp-utils';
  * Flight ident / id (designator like `UAL123`, registration `N12345`, or an
  * `fa_flight_id` like `UAL123-1700000000-airline-0123`). Interpolated into the
  * URL path, so the charset is restricted to what real idents use — letters,
- * digits, `.` and `-` — which by construction can't escape the path segment
- * (no `/ .. ? #` or whitespace).
+ * digits, `.` and `-` — and the first character must be a letter or digit.
+ * That excludes `/ ? #` and whitespace, and also the dot segments `.` / `..`,
+ * which fetch would otherwise normalise (`/flights/../track` → `/track`) into a
+ * different AeroAPI endpoint.
  */
 export const FlightIdent = z
   .string()
   .min(1)
   .regex(
-    /^[A-Za-z0-9.-]+$/,
-    'must be a flight ident, registration, or fa_flight_id (letters, digits, ".", "-")',
+    /^[A-Za-z0-9][A-Za-z0-9.-]*$/,
+    'must be a flight ident, registration, or fa_flight_id (letters, digits, ".", "-"; starting with a letter or digit)',
   );
 
 /** Airport code (ICAO `KJFK`, IATA `JFK`, or LID) — alphanumeric only. */
