@@ -6,6 +6,7 @@ import {
   readTtlMsEnv,
   createApiClient,
   createResponseCache,
+  currentCallSignal,
   McpToolError,
   type ApiClient,
   type ResponseCache,
@@ -106,10 +107,22 @@ export class FlightAwareClient {
    * per-query billing. `cache: 'static'` selects the longer reference-data TTL
    * (AEROAPI_STATIC_CACHE_TTL) for metadata that barely changes; the default
    * 'dynamic' tier (AEROAPI_CACHE_TTL) is for live data.
+   *
+   * Concurrent identical reads are single-flighted: an agent fanning out
+   * parallel tool calls for the same path pays for ONE billed AeroAPI query,
+   * not N. The tool call's cancellation signal is passed through so one
+   * caller cancelling never fails the others sharing that request (they
+   * re-run their own load instead).
    */
   async get<T = unknown>(path: string, opts: { cache?: 'dynamic' | 'static' } = {}): Promise<T> {
     const tier = opts.cache === 'static' ? 'static' : 'dynamic';
-    return this.cache.fetchThrough(path, () => this.api.fetchJson<T>('GET', path), tier) as Promise<T>;
+    const signal = currentCallSignal();
+    return this.cache.fetchThrough(
+      path,
+      () => this.api.fetchJson<T>('GET', path),
+      tier,
+      signal ? { signal } : {},
+    ) as Promise<T>;
   }
 
   /**

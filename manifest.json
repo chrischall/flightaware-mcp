@@ -53,7 +53,7 @@
     "aeroapi_output_dir": {
       "type": "string",
       "title": "Map Output Directory",
-      "description": "Default directory for flight-map PNGs (default: <OS temp dir>/flightaware-mcp)",
+      "description": "Default directory for flight-map PNGs (default: ~/Downloads/flightaware-mcp)",
       "required": false,
       "sensitive": false
     },

@@ -82,9 +82,11 @@ function confirmAlertWrite(
     target: string;
     confirmToken: string | undefined;
     request: AlertWrite;
+    /** The tool's validated arguments minus confirmToken — bound into both confirmation rails. */
+    args: object;
   },
 ) {
-  const { tool, action, message, target, confirmToken, request } = opts;
+  const { tool, action, message, target, confirmToken, request, args } = opts;
   const preview: Record<string, unknown> = { ...request };
   return requireConfirmationWithFallback(
     ctx,
@@ -93,6 +95,9 @@ function confirmAlertWrite(
       message,
       details: preview,
       tool,
+      // One AeroAPI key = one account; there is no per-call principal to bind.
+      account: undefined,
+      args,
       confirmToken,
       subject: () => ({ target, payload: request, preview }),
     }),
@@ -154,6 +159,7 @@ export function registerAlertTools(server: McpServer): void {
         target: '',
         confirmToken,
         request: { method: 'POST', path: '/alerts', body },
+        args,
       });
       if (gate) return gate;
       const res = await client.write('POST', '/alerts', body);
@@ -193,6 +199,7 @@ export function registerAlertTools(server: McpServer): void {
         target: String(id),
         confirmToken,
         request: { method: 'PUT', path, body },
+        args: { id, ...args },
       });
       if (gate) return gate;
       const res = await client.write('PUT', path, body);
@@ -230,6 +237,7 @@ export function registerAlertTools(server: McpServer): void {
         target: String(id),
         confirmToken,
         request: { method: 'DELETE', path },
+        args: { id },
       });
       if (gate) return gate;
       const res = await client.write('DELETE', path);
@@ -290,6 +298,7 @@ export function registerAlertTools(server: McpServer): void {
         target: '/alerts/endpoint',
         confirmToken,
         request: { method: 'PUT', path: '/alerts/endpoint', body },
+        args: { url, format },
       });
       if (gate) return gate;
       const res = await client.write('PUT', '/alerts/endpoint', body);

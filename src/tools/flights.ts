@@ -1,7 +1,5 @@
 import { z } from 'zod';
 import type { McpServer, CallToolResult } from '@modelcontextprotocol/server';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
 import { McpToolError, minifiedResult, readEnvVar, resolveOutputDir, writeBinaryOutput } from '@chrischall/mcp-utils';
 import { viewArg, viewResponse } from '../view.js';
 import { client } from '../client.js';
@@ -135,7 +133,7 @@ export function registerFlightTools(server: McpServer): void {
     'fa_get_flight_map',
     {
       description:
-        'Get a rendered map image (PNG) of a flight by fa_flight_id. Writes the PNG to disk (default: $AEROAPI_OUTPUT_DIR, else <OS temp dir>/flightaware-mcp) and returns the path, or returns it inline as base64 when inline:true.',
+        'Get a rendered map image (PNG) of a flight by fa_flight_id. Writes the PNG to disk (default: $AEROAPI_OUTPUT_DIR, else ~/Downloads/flightaware-mcp) and returns the path, or returns it inline as base64 when inline:true.',
       // Not read-only: the default path creates directories and writes a PNG file.
       annotations: {
         readOnlyHint: false,
@@ -154,7 +152,7 @@ export function registerFlightTools(server: McpServer): void {
         output_dir: z
           .string()
           .optional()
-          .describe('Directory to write the PNG to (default: $AEROAPI_OUTPUT_DIR, else <OS temp dir>/flightaware-mcp). When AEROAPI_OUTPUT_DIR is set, this must be inside it.'),
+          .describe('Directory to write the PNG to (default: $AEROAPI_OUTPUT_DIR, else ~/Downloads/flightaware-mcp). When AEROAPI_OUTPUT_DIR is set, this must be inside it.'),
         inline: z
           .boolean()
           .optional()
@@ -176,7 +174,7 @@ export function registerFlightTools(server: McpServer): void {
           content: [{ type: 'image', data: base64, mimeType: 'image/png' }],
         };
       }
-      // arg → $AEROAPI_OUTPUT_DIR → <tmpdir>/flightaware-mcp; the write is an exclusive, no-follow
+      // arg → $AEROAPI_OUTPUT_DIR → ~/Downloads/flightaware-mcp; the write is an exclusive, no-follow
       // create under a sanitized, never-overwriting name (flight-map-X-2.png …).
       // output_dir is model-chosen: once the operator sets AEROAPI_OUTPUT_DIR,
       // a per-call directory must stay inside it (checked through symlinks).
@@ -185,8 +183,8 @@ export function registerFlightTools(server: McpServer): void {
       // (Claude Desktop / .mcpb) spawn the server with cwd "/", where the write
       // fails (EROFS/EACCES) after the billed map query has already been paid.
       const configuredDir = readEnvVar('AEROAPI_OUTPUT_DIR');
-      const perCallDir = output_dir ?? (configuredDir ? undefined : join(tmpdir(), 'flightaware-mcp'));
-      const dir = resolveOutputDir(perCallDir, 'AEROAPI_OUTPUT_DIR', {
+      const dir = resolveOutputDir(output_dir, 'AEROAPI_OUTPUT_DIR', {
+        name: 'flightaware-mcp',
         ...(configuredDir ? { allowedRoots: [configuredDir] } : {}),
       });
       const path = writeBinaryOutput({ dir, baseName: `flight-map-${id}`, base64, mimeType: 'image/png' });
