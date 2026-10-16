@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.3.2](https://github.com/chrischall/flightaware-mcp/compare/v1.3.1...v1.3.2) (2026-10-16)
+
+
+### Bug Fixes
+
+* **deps:** Bump the production-dependencies group with 4 updates ([#158](https://github.com/chrischall/flightaware-mcp/issues/158)) ([602dad1](https://github.com/chrischall/flightaware-mcp/commit/602dad1a90a783179e0f91d45921209627f3c1e1))
+* **flight-map:** always confine output_dir to the default output directory ([#162](https://github.com/chrischall/flightaware-mcp/issues/162)) ([6bf4308](https://github.com/chrischall/flightaware-mcp/commit/6bf430822588181313402717707d887a481993f4))
+* **plugin:** launch the published package so marketplace installs start ([#164](https://github.com/chrischall/flightaware-mcp/issues/164)) ([698d4ed](https://github.com/chrischall/flightaware-mcp/commit/698d4ed9deab4e4ab2efd2b995aa804baacc050f))
+
+
+### Documentation
+
+* **claude:** narrow the first-party bump rule to runtime dependencies ([#161](https://github.com/chrischall/flightaware-mcp/issues/161)) ([8d0f6d5](https://github.com/chrischall/flightaware-mcp/commit/8d0f6d585ea9009cc2071c3a1ae7130f3417f9d1))
+
 ## [1.3.1](https://github.com/chrischall/flightaware-mcp/compare/v1.3.0...v1.3.1) (2026-10-09)
 
 
