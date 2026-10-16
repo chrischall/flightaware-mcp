@@ -5,7 +5,7 @@ Guidance for Claude working in this repo.
 ## TL;DR
 
 **FlightAware AeroAPI** (v4) MCP server. Wraps the AeroAPI REST API
-(`https://aeroapi.flightaware.com/aeroapi`) and exposes 33 tools to Claude over
+(`https://aeroapi.flightaware.com/aeroapi`) and exposes 34 tools (incl. fa_healthcheck) to Claude over
 stdio: flight lookup/search/positions/count/track/position/route/map/history/
 canonical, airport boards + counts + routes + delays + weather + nearby +
 canonical, operators, aircraft owner, scheduled flights, Foresight predictive
@@ -23,7 +23,7 @@ so writes share the timeout, cancellation, 429 retry and 401/429 messages. No fe
 
 ```
 AEROAPI_API_KEY=<key>            # Required. Create at https://www.flightaware.com/aeroapi/portal/
-AEROAPI_OUTPUT_DIR=<dir>         # Optional. Where flight-map PNGs are written (default: ~/Downloads/flightaware-mcp); when set, confines per-call output_dir
+AEROAPI_OUTPUT_DIR=<dir>         # Optional. Where flight-map PNGs are written (default: ~/Downloads/flightaware-mcp); a per-call output_dir must be inside it
 AEROAPI_CACHE_TTL=<secs>        # Optional. Live-data read-cache TTL (default 15; 0 disables)
 AEROAPI_STATIC_CACHE_TTL=<secs> # Optional. Reference-data read-cache TTL (default 3600; 0 disables)
 MCP_CONFIRM_MODE=<mode>         # Optional. ask-user|auto|refuse for writes on clients without prompts (default ask-user; unrecognised = refuse)
