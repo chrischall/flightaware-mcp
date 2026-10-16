@@ -1,3 +1,5 @@
+import { homedir } from 'node:os';
+import { join } from 'node:path';
 import { z } from 'zod';
 import type { McpServer, CallToolResult } from '@modelcontextprotocol/server';
 import { McpToolError, minifiedResult, readEnvVar, resolveOutputDir, writeBinaryOutput } from '@chrischall/mcp-utils';
@@ -152,7 +154,7 @@ export function registerFlightTools(server: McpServer): void {
         output_dir: z
           .string()
           .optional()
-          .describe('Directory to write the PNG to (default: $AEROAPI_OUTPUT_DIR, else ~/Downloads/flightaware-mcp). When AEROAPI_OUTPUT_DIR is set, this must be inside it.'),
+          .describe('Directory to write the PNG to (default: $AEROAPI_OUTPUT_DIR, else ~/Downloads/flightaware-mcp). Must be inside that default directory.'),
         inline: z
           .boolean()
           .optional()
@@ -176,16 +178,17 @@ export function registerFlightTools(server: McpServer): void {
       }
       // arg → $AEROAPI_OUTPUT_DIR → ~/Downloads/flightaware-mcp; the write is an exclusive, no-follow
       // create under a sanitized, never-overwriting name (flight-map-X-2.png …).
-      // output_dir is model-chosen: once the operator sets AEROAPI_OUTPUT_DIR,
-      // a per-call directory must stay inside it (checked through symlinks).
-      // Unset keeps the old, unconfined behaviour (the fleet pattern, as in
-      // splitwise-mcp). The last-resort default is NOT cwd: desktop hosts
-      // (Claude Desktop / .mcpb) spawn the server with cwd "/", where the write
-      // fails (EROFS/EACCES) after the billed map query has already been paid.
-      const configuredDir = readEnvVar('AEROAPI_OUTPUT_DIR');
+      // output_dir is model-chosen, so a per-call directory must always stay
+      // inside the directory the default write would use (checked through
+      // symlinks): $AEROAPI_OUTPUT_DIR when the operator set it, otherwise
+      // ~/Downloads/flightaware-mcp. The last-resort default is NOT cwd:
+      // desktop hosts (Claude Desktop / .mcpb) spawn the server with cwd "/",
+      // where the write fails (EROFS/EACCES) after the billed map query has
+      // already been paid.
+      const outputRoot = readEnvVar('AEROAPI_OUTPUT_DIR') || join(homedir(), 'Downloads', 'flightaware-mcp');
       const dir = resolveOutputDir(output_dir, 'AEROAPI_OUTPUT_DIR', {
         name: 'flightaware-mcp',
-        ...(configuredDir ? { allowedRoots: [configuredDir] } : {}),
+        allowedRoots: [outputRoot],
       });
       const path = writeBinaryOutput({ dir, baseName: `flight-map-${id}`, base64, mimeType: 'image/png' });
       return minifiedResult({ map: path });

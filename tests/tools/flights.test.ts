@@ -24,6 +24,7 @@ describe('fa_get_flight_map file output', () => {
 
   it('writes into output_dir under a never-overwriting name', async () => {
     const dir = mkdtempSync(join(tmpdir(), 'fa-'));
+    vi.stubEnv('AEROAPI_OUTPUT_DIR', dir);
     try {
       const p1 = await saveMap({ output_dir: dir });
       const p2 = await saveMap({ output_dir: dir });
@@ -32,6 +33,7 @@ describe('fa_get_flight_map file output', () => {
       expect(readFileSync(p1).toString()).toBe('fake-png');
       expect(readFileSync(p2).toString()).toBe('fake-png');
     } finally {
+      vi.unstubAllEnvs();
       rmSync(dir, { recursive: true, force: true });
     }
   });
@@ -39,9 +41,11 @@ describe('fa_get_flight_map file output', () => {
   it('creates a nested output_dir that does not exist yet', async () => {
     const base = mkdtempSync(join(tmpdir(), 'fa-'));
     const dir = join(base, 'nested', 'out');
+    vi.stubEnv('AEROAPI_OUTPUT_DIR', base);
     try {
       expect(dirname(await saveMap({ output_dir: dir }))).toBe(dir);
     } finally {
+      vi.unstubAllEnvs();
       rmSync(base, { recursive: true, force: true });
     }
   });
@@ -49,12 +53,14 @@ describe('fa_get_flight_map file output', () => {
   it('never writes through a symlink planted at the destination name', async () => {
     const dir = mkdtempSync(join(tmpdir(), 'fa-'));
     const outside = join(mkdtempSync(join(tmpdir(), 'fa-out-')), 'target.png');
+    vi.stubEnv('AEROAPI_OUTPUT_DIR', dir);
     try {
       symlinkSync(outside, join(dir, `flight-map-${ID}.png`)); // dangling: looks "free" to existsSync
       const p = await saveMap({ output_dir: dir });
       expect(p).toBe(join(dir, `flight-map-${ID}-2.png`));
       expect(existsSync(outside)).toBe(false);
     } finally {
+      vi.unstubAllEnvs();
       rmSync(dir, { recursive: true, force: true });
     }
   });
@@ -74,6 +80,27 @@ describe('fa_get_flight_map file output', () => {
     } finally {
       vi.unstubAllEnvs();
       rmSync(root, { recursive: true, force: true });
+      rmSync(elsewhere, { recursive: true, force: true });
+    }
+  });
+
+  it('confines a per-call output_dir to ~/Downloads/flightaware-mcp when AEROAPI_OUTPUT_DIR is unset', async () => {
+    const home = mkdtempSync(join(tmpdir(), 'fa-home-'));
+    const elsewhere = mkdtempSync(join(tmpdir(), 'fa-else-'));
+    vi.stubEnv('AEROAPI_OUTPUT_DIR', '');
+    vi.stubEnv('HOME', home);
+    try {
+      const inside = join(home, 'Downloads', 'flightaware-mcp', 'maps');
+      expect(dirname(await saveMap({ output_dir: inside }))).toBe(inside);
+      vi.spyOn(client, 'get').mockResolvedValue({ map: png });
+      const h = await createTestHarness(registerFlightTools);
+      const res = await h.callTool('fa_get_flight_map', { id: ID, output_dir: join(elsewhere, 'sub') });
+      await h.close();
+      expect(res.isError).toBe(true);
+      expect(readdirSync(elsewhere)).toEqual([]);
+    } finally {
+      vi.unstubAllEnvs();
+      rmSync(home, { recursive: true, force: true });
       rmSync(elsewhere, { recursive: true, force: true });
     }
   });
@@ -132,11 +159,18 @@ describe('flight tools', () => {
   it('fa_get_flight_map writes a PNG to disk by default and returns the path', async () => {
     const png = Buffer.from('fake-png').toString('base64');
     vi.spyOn(client, 'get').mockResolvedValue({ map: png });
+    const dir = mkdtempSync(join(tmpdir(), 'fa-'));
+    vi.stubEnv('AEROAPI_OUTPUT_DIR', dir);
     const h = await createTestHarness(registerFlightTools);
-    const res = await h.callTool('fa_get_flight_map', { id: 'UAL123-1700000000-airline-0123', output_dir: '/tmp' });
-    const data = parseToolResult<{ map: string }>(res);
-    expect(data.map).toMatch(/\/tmp\/flight-map-UAL123-1700000000-airline-0123.*\.png$/);
-    await h.close();
+    try {
+      const res = await h.callTool('fa_get_flight_map', { id: 'UAL123-1700000000-airline-0123', output_dir: dir });
+      const data = parseToolResult<{ map: string }>(res);
+      expect(data.map).toBe(join(dir, 'flight-map-UAL123-1700000000-airline-0123.png'));
+    } finally {
+      await h.close();
+      vi.unstubAllEnvs();
+      rmSync(dir, { recursive: true, force: true });
+    }
   });
 
   it('fa_get_flight_map is not annotated read-only, since it writes files to disk', async () => {
