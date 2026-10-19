@@ -4,6 +4,17 @@ slug: flightaware
 summary: >-
   Live flight tracking and aviation data via FlightAware AeroAPI — flights,
   airports, operators, schedules, and alerts
+examples:
+  - prompt: >-
+      Where is United flight UA123 right now, and is it running on time?
+    note: Looks up recent and current flights for the ident, then its live position
+  - prompt: >-
+      Are there any delays at Chicago O'Hare right now, and what's the current
+      weather there?
+    note: Combines the airport delay feed with METAR observations
+  - prompt: >-
+      Show me the next few scheduled departures from SFO
+    note: Reads the airport's flight board
 env:
   - name: AEROAPI_API_KEY
     secret: true
