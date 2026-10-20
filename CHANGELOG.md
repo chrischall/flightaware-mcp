@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.3.3](https://github.com/chrischall/flightaware-mcp/compare/v1.3.2...v1.3.3) (2026-10-20)
+
+
+### Bug Fixes
+
+* **deps:** Bump the production-dependencies group with 2 updates ([#171](https://github.com/chrischall/flightaware-mcp/issues/171)) ([6708fcf](https://github.com/chrischall/flightaware-mcp/commit/6708fcf5296277e356b7dcf54677afdf1c18526f))
+
+
+### Documentation
+
+* **mint:** add sample prompts for the public catalog ([#167](https://github.com/chrischall/flightaware-mcp/issues/167)) ([b117e00](https://github.com/chrischall/flightaware-mcp/commit/b117e00d8a6244135459a8f7e968842926a59af8))
+
 ## [1.3.2](https://github.com/chrischall/flightaware-mcp/compare/v1.3.1...v1.3.2) (2026-10-16)
 
 
