@@ -3,6 +3,7 @@ import type { McpServer } from '@modelcontextprotocol/server';
 import { viewArg, viewResponse } from '../view.js';
 import { client } from '../client.js';
 import { AirportCode, pageParams, dateWindowParams, qs } from './shared.js';
+import { AIRPORT_ALIASES, travelMeta } from './hints.js';
 
 /** Board variants map to AeroAPI airport sub-paths (`all` → the base /flights). */
 const BOARDS = [
@@ -19,6 +20,7 @@ export function registerAirportTools(server: McpServer): void {
     {
       description: 'Get details for an airport by code (ICAO like KJFK, IATA like JFK, or LID).',
       annotations: { readOnlyHint: true, openWorldHint: true },
+      _meta: travelMeta('lookup', { aliases: AIRPORT_ALIASES }),
       inputSchema: z.object({
         view: viewArg(),
         id: AirportCode.describe('Airport code (ICAO/IATA/LID)'),
@@ -36,6 +38,7 @@ export function registerAirportTools(server: McpServer): void {
       description:
         'Get a flight board for an airport: all flights, or just arrivals/departures/scheduled_arrivals/scheduled_departures.',
       annotations: { readOnlyHint: true, openWorldHint: true },
+      _meta: travelMeta('lookup', { aliases: AIRPORT_ALIASES }),
       inputSchema: z.object({
         view: viewArg(),
         id: AirportCode.describe('Airport code (ICAO/IATA/LID)'),
@@ -62,6 +65,7 @@ export function registerAirportTools(server: McpServer): void {
     {
       description: 'List airports known to AeroAPI (paged). Use the cursor to page through.',
       annotations: { readOnlyHint: true, openWorldHint: true },
+      _meta: travelMeta('lookup', { aliases: ['airports'] }),
       inputSchema: z.object({
         view: viewArg(),
         ...pageParams,
@@ -80,6 +84,7 @@ export function registerAirportTools(server: McpServer): void {
     {
       description: 'Find airports near a latitude/longitude within a radius (statute miles).',
       annotations: { readOnlyHint: true, openWorldHint: true },
+      _meta: travelMeta('lookup', { aliases: ['airports near me', 'nearest airport', 'nearby airports'] }),
       inputSchema: z.object({
         view: viewArg(),
         latitude: z.number().min(-90).max(90).describe('Latitude in decimal degrees'),
@@ -106,6 +111,7 @@ export function registerAirportTools(server: McpServer): void {
       description:
         'Get current airport delays — all delayed airports, or just one when `id` is given.',
       annotations: { readOnlyHint: true, openWorldHint: true },
+      _meta: travelMeta('lookup', { aliases: ['airport delays', 'delays', 'ground stop'] }),
       inputSchema: z.object({
         view: viewArg(),
         id: AirportCode.optional().describe(
@@ -126,6 +132,7 @@ export function registerAirportTools(server: McpServer): void {
     {
       description: 'Get weather for an airport: current METAR observations, or the TAF forecast.',
       annotations: { readOnlyHint: true, openWorldHint: true },
+      _meta: travelMeta('lookup', { aliases: ['airport weather', 'weather', 'forecast'] }),
       inputSchema: z.object({
         view: viewArg(),
         id: AirportCode.describe('Airport code (ICAO/IATA/LID)'),
@@ -150,6 +157,7 @@ export function registerAirportTools(server: McpServer): void {
       description:
         'Get current flight counts at an airport: { departed, enroute, scheduled_arrivals, scheduled_departures }.',
       annotations: { readOnlyHint: true, openWorldHint: true },
+      _meta: travelMeta('lookup', { aliases: ['how busy is the airport'] }),
       inputSchema: z.object({
         view: viewArg(),
         id: AirportCode.describe('Airport code (ICAO/IATA/LID)'),
@@ -167,6 +175,7 @@ export function registerAirportTools(server: McpServer): void {
       description:
         'Get the most popular routes (with aircraft types, counts, and filed altitudes) flown between an origin and destination airport.',
       annotations: { readOnlyHint: true, openWorldHint: true },
+      _meta: travelMeta('lookup', { aliases: ['routes', 'nonstop flights'] }),
       inputSchema: z.object({
         view: viewArg(),
         id: AirportCode.describe('Origin airport code (ICAO/IATA/LID)'),
@@ -189,6 +198,7 @@ export function registerAirportTools(server: McpServer): void {
       description:
         'Resolve an airport code to its canonical AeroAPI identifier (and equivalents). NOTE: requires a Standard or Premium AeroAPI tier — the free Personal tier returns 401.',
       annotations: { readOnlyHint: true, openWorldHint: true },
+      _meta: travelMeta('lookup', { aliases: AIRPORT_ALIASES }),
       inputSchema: z.object({
         view: viewArg(),
         id: AirportCode.describe('Airport code (ICAO/IATA/LID) to canonicalize'),

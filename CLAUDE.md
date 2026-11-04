@@ -53,6 +53,9 @@ so the host's install-time `tools/list` probe still succeeds.
 - `src/tools/shared.ts` — path-segment guards (`FlightIdent`/`AirportCode`/
   `OperatorCode`/`AlertId`), pagination/date-window schemas and `qs()`. The flight-map PNG is
   written with mcp-utils' `resolveOutputDir` + `writeBinaryOutput`.
+- `src/tools/hints.ts` — `_meta.mint` context-group hints (`travelMeta`, group
+  `travel`) and the brief rung of the one canonical read, `fa_list_alerts`
+  (*what's on*); `tests/mint-hints.test.ts` holds every served tool to it.
 - `src/tools/{flights,airports,operators,aircraft,schedules,alerts}.ts` — each
   exports `register*Tools(server)`; `index.ts` wires them via `runMcp`.
 

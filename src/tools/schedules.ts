@@ -3,6 +3,7 @@ import type { McpServer } from '@modelcontextprotocol/server';
 import { viewArg, viewResponse } from '../view.js';
 import { client } from '../client.js';
 import { AirportCode, OperatorCode, pageParams, qs } from './shared.js';
+import { travelMeta } from './hints.js';
 
 /** YYYY-MM-DD date (path segment for the schedules endpoint). */
 const IsoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'must be a YYYY-MM-DD date');
@@ -14,6 +15,7 @@ export function registerScheduleTools(server: McpServer): void {
       description:
         'Get airline-scheduled flights between two dates (YYYY-MM-DD), optionally filtered by origin, destination, airline, or flight number.',
       annotations: { readOnlyHint: true, openWorldHint: true },
+      _meta: travelMeta('lookup', { aliases: ['flight schedule', 'scheduled flights', 'timetable'] }),
       inputSchema: z.object({
         view: viewArg(),
         date_start: IsoDate.describe('Start date, YYYY-MM-DD'),
@@ -55,6 +57,7 @@ export function registerScheduleTools(server: McpServer): void {
       description:
         'Predictive flight search via AeroAPI Foresight (Boolean query language, like fa_search_flights_advanced, but predicted data). NOTE: Foresight is a premium tier — expect a 402/403 unless your subscription includes it.',
       annotations: { readOnlyHint: true, openWorldHint: true },
+      _meta: travelMeta('lookup', { aliases: ['predicted arrival', 'flight prediction'] }),
       inputSchema: z.object({
         view: viewArg(),
         query: z.string().min(1).describe('Boolean query expression'),
