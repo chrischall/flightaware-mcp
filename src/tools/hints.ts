@@ -83,7 +83,8 @@ const isoDate = (value: string | null | undefined): string | undefined => {
  * `title — <ISO date | no date> — <status>`, at most 120 chars. The title is
  * the watched ident and route, else the alert's description; the date is when
  * the alert becomes active; the status says whether it is active, paused or
- * past its end date.
+ * past its end date. A title that starts with `-- ` or `\` is escaped with
+ * one leading `\` so a description can never masquerade as a note line.
  */
 export function briefAlertLine(alert: RawAlert, now: number = Date.now()): string {
   const ident = text(alert.ident, alert.ident_icao, alert.ident_iata);
@@ -103,9 +104,14 @@ export function briefAlertLine(alert: RawAlert, now: number = Date.now()): strin
         : end
           ? `active until ${end}`
           : 'active';
+  // A title that starts with `-- ` (a note) or `\` (the escape itself) gets
+  // one leading backslash, which the gateway strips from every item line.
+  const escaped = title.startsWith('-- ') || title.startsWith('\\') ? `\\${title}` : title;
+  // The whole line is held to 120 chars; only the title can give way, since
+  // the date and status are bounded (`active until YYYY-MM-DD` at most).
   const tail = ` — ${date} — ${status}`;
   const room = BRIEF_MAX - tail.length;
-  const shown = title.length > room ? `${title.slice(0, Math.max(room - 1, 0))}…` : title;
+  const shown = escaped.length > room ? `${escaped.slice(0, Math.max(room - 1, 0))}…` : escaped;
   return `${shown}${tail}`;
 }
 

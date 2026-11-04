@@ -118,7 +118,8 @@ On a host with context groups (mcp-host), every FlightAware tool joins the
   alert, `ident route — <start date or no date> — <active | active until … |
   expired … | paused>`, inside the untrusted-data envelope (`data: string[]`),
   with `-- none` for an account with no alerts and `-- more` when AeroAPI has
-  another page. It names no `subject` — AeroAPI is one account's key with no
+  another page; an alert description that starts with `-- ` or `\` is
+  escaped with one leading `\` so it never reads as a note. It names no `subject` — AeroAPI is one account's key with no
   listable set of the person's subjects — and no `when`, as the alert list
   takes no date range. Nothing here answers *what's new* or *what's due*.
   Alerts need a Standard/Premium AeroAPI tier, so on a Personal key the group
