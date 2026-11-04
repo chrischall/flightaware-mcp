@@ -1,5 +1,25 @@
 # Changelog
 
+## [1.4.0](https://github.com/chrischall/flightaware-mcp/compare/v1.3.2...v1.4.0) (2026-11-04)
+
+
+### Features
+
+* context-group hints ([#176](https://github.com/chrischall/flightaware-mcp/issues/176)) ([353652d](https://github.com/chrischall/flightaware-mcp/commit/353652d9d865fc3dffca566ad4d058e8cd5f8756))
+
+
+### Bug Fixes
+
+* **brief:** align the brief view with the fleet contract ([#177](https://github.com/chrischall/flightaware-mcp/issues/177)) ([ba6bb6a](https://github.com/chrischall/flightaware-mcp/commit/ba6bb6abfc19dada6988995922cc2eaf197b3d9f))
+* **deps:** Bump @chrischall/mcp-utils ([#175](https://github.com/chrischall/flightaware-mcp/issues/175)) ([43fde9b](https://github.com/chrischall/flightaware-mcp/commit/43fde9b9100c16613a01c54817e8efb13ecdc2fb))
+* **deps:** Bump the production-dependencies group with 2 updates ([#171](https://github.com/chrischall/flightaware-mcp/issues/171)) ([6708fcf](https://github.com/chrischall/flightaware-mcp/commit/6708fcf5296277e356b7dcf54677afdf1c18526f))
+* **deps:** Bump the production-dependencies group with 3 updates ([#173](https://github.com/chrischall/flightaware-mcp/issues/173)) ([2a1a3dc](https://github.com/chrischall/flightaware-mcp/commit/2a1a3dc2801965fb5c0832d9b72780d825fe0505))
+
+
+### Documentation
+
+* **mint:** add sample prompts for the public catalog ([#167](https://github.com/chrischall/flightaware-mcp/issues/167)) ([b117e00](https://github.com/chrischall/flightaware-mcp/commit/b117e00d8a6244135459a8f7e968842926a59af8))
+
 ## [1.3.2](https://github.com/chrischall/flightaware-mcp/compare/v1.3.1...v1.3.2) (2026-10-16)
 
 
