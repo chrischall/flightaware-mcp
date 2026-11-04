@@ -11,6 +11,7 @@ import {
   dateWindowParams,
   qs,
 } from './shared.js';
+import { FLIGHT_ALIASES, travelMeta } from './hints.js';
 
 export function registerFlightTools(server: McpServer): void {
   server.registerTool(
@@ -19,6 +20,7 @@ export function registerFlightTools(server: McpServer): void {
       description:
         'Get flights for an ident — a flight designator (e.g. UAL123, AAL100), aircraft registration (e.g. N12345), or fa_flight_id. Returns recent, current, and scheduled flights for that ident.',
       annotations: { readOnlyHint: true, openWorldHint: true },
+      _meta: travelMeta('lookup', { aliases: FLIGHT_ALIASES }),
       inputSchema: z.object({
         view: viewArg(),
         ident: FlightIdent.describe('Flight designator, registration, or fa_flight_id'),
@@ -44,6 +46,7 @@ export function registerFlightTools(server: McpServer): void {
       description:
         'Search airborne flights using AeroAPI\'s simplified query syntax — a single string of "-key value" pairs. Keys: -prefix -type -idents -identOrReg -airline -destination -origin -originOrDestination -aboveAltitude -belowAltitude -aboveGroundspeed -belowGroundspeed -latlong "MINLAT MINLON MAXLAT MAXLON" -filter {ga|airline}. Example: -airline UAL -belowAltitude 30000',
       annotations: { readOnlyHint: true, openWorldHint: true },
+      _meta: travelMeta('lookup', { aliases: ['flights', 'find a flight', 'flights between'] }),
       inputSchema: z.object({
         view: viewArg(),
         query: z.string().min(1).describe('Simplified "-key value" search string (max 1000 bytes)'),
@@ -64,6 +67,7 @@ export function registerFlightTools(server: McpServer): void {
         'Operators: true/false/null/notnull/=/!=/</>/<=/>=, match/notmatch (case-insensitive wildcards), range (two values), in/orig_or_dest/aircraftType/ident/ident_or_reg ({a b c} value lists), airline (1=airline, 0=GA). ' +
         'Common keys: ident, orig, dest (ICAO codes), aircraftType, alt (hundreds of ft), prefix, lifeguard, cancelled, arrived.',
       annotations: { readOnlyHint: true, openWorldHint: true },
+      _meta: travelMeta('lookup', { aliases: ['flights', 'find a flight'] }),
       inputSchema: z.object({
         view: viewArg(),
         query: z
@@ -84,6 +88,7 @@ export function registerFlightTools(server: McpServer): void {
     {
       description: 'Get the position track (breadcrumb log) for a specific flight by fa_flight_id.',
       annotations: { readOnlyHint: true, openWorldHint: true },
+      _meta: travelMeta('lookup', { aliases: ['flight path', 'where is the plane', 'track'] }),
       inputSchema: z.object({
         view: viewArg(),
         id: FlightIdent.describe('fa_flight_id of the flight'),
@@ -104,6 +109,7 @@ export function registerFlightTools(server: McpServer): void {
     {
       description: 'Get the most recent reported position for an in-air flight by fa_flight_id.',
       annotations: { readOnlyHint: true, openWorldHint: true },
+      _meta: travelMeta('lookup', { aliases: ['where is the plane', 'where is my flight', 'position'] }),
       inputSchema: z.object({
         view: viewArg(),
         id: FlightIdent.describe('fa_flight_id of the flight'),
@@ -120,6 +126,7 @@ export function registerFlightTools(server: McpServer): void {
     {
       description: 'Get the decoded route (fixes/waypoints) for a specific flight by fa_flight_id.',
       annotations: { readOnlyHint: true, openWorldHint: true },
+      _meta: travelMeta('lookup', { aliases: ['flight route', 'flight plan'] }),
       inputSchema: z.object({
         view: viewArg(),
         id: FlightIdent.describe('fa_flight_id of the flight'),
@@ -143,6 +150,7 @@ export function registerFlightTools(server: McpServer): void {
         idempotentHint: false,
         openWorldHint: true,
       },
+      _meta: travelMeta('lookup', { aliases: ['flight map', 'map'] }),
       inputSchema: z.object({
         id: FlightIdent.describe('fa_flight_id of the flight'),
         height: z.number().int().min(1).optional().describe('Image height in pixels'),
@@ -201,6 +209,7 @@ export function registerFlightTools(server: McpServer): void {
       description:
         'Get historical flights for an ident (designator, registration, or fa_flight_id) beyond the recent window covered by fa_get_flights. NOTE: historical data requires a Standard or Premium AeroAPI tier — the free Personal tier returns 401.',
       annotations: { readOnlyHint: true, openWorldHint: true },
+      _meta: travelMeta('lookup', { aliases: ['past flights', 'flight history'] }),
       inputSchema: z.object({
         view: viewArg(),
         ident: FlightIdent.describe('Flight designator, registration, or fa_flight_id'),
@@ -226,6 +235,7 @@ export function registerFlightTools(server: McpServer): void {
       description:
         'Search live flight POSITIONS using the structured "{operator key value}" query language (same grammar as fa_search_flights_advanced — NOT the simplified "-key value" syntax). Returns position points rather than flight summaries. Example: {match ident UAL*} {> alt 300}.',
       annotations: { readOnlyHint: true, openWorldHint: true },
+      _meta: travelMeta('lookup', { aliases: ['planes nearby', 'planes overhead'] }),
       inputSchema: z.object({
         view: viewArg(),
         query: z
@@ -247,6 +257,7 @@ export function registerFlightTools(server: McpServer): void {
       description:
         'Count flights matching a query without returning the flights themselves. Returns { count }. Uses the SIMPLIFIED "-key value" syntax (same as fa_search_flights, NOT the structured grammar of fa_search_flights_advanced). Example: -airline UAL -belowAltitude 30000.',
       annotations: { readOnlyHint: true, openWorldHint: true },
+      _meta: travelMeta('lookup', { aliases: ['how many flights'] }),
       inputSchema: z.object({
         view: viewArg(),
         query: z
@@ -269,6 +280,7 @@ export function registerFlightTools(server: McpServer): void {
       description:
         'Resolve a flight ident (designator/registration) to its canonical form and any alternate idents. NOTE: requires a Standard or Premium AeroAPI tier — the free Personal tier returns 401.',
       annotations: { readOnlyHint: true, openWorldHint: true },
+      _meta: travelMeta('lookup', { aliases: FLIGHT_ALIASES }),
       inputSchema: z.object({
         view: viewArg(),
         ident: FlightIdent.describe('Flight designator or registration to canonicalize'),

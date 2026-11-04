@@ -84,6 +84,9 @@ field nobody knew about. The practical consequence is that on a typical AeroAPI
 flight or airport payload compact saves little — it is the honest ceiling, not
 a compression claim.
 
+`fa_list_alerts` also takes `view: "brief"` — the context-groups one-liner
+(see [In context groups](#in-context-groups)).
+
 `view: "full"` returns AeroAPI's payload untouched. There is deliberately **no
 `raw` rung**: nothing normalises the payload on the way through, so `full`
 already IS the untouched upstream response and a third value would silently
@@ -104,6 +107,31 @@ Why the six without it have none:
 Passing `view` to one of those six is not an error and not a warning: MCP tool
 schemas are non-strict, so the key is dropped and you get that tool's ordinary
 output.
+
+## In context groups
+
+On a host with context groups (mcp-host), every FlightAware tool joins the
+**travel** group (`_meta.mint.domain: "travel"`); the healthcheck joins none.
+
+- **Canonical read:** `fa_list_alerts` answers *what's on* — the flights you
+  are watching (`canonical: true`). Its `view: "brief"` answers one line per
+  alert, `ident route — <start date or no date> — <active | active until … |
+  expired … | paused>`, inside the untrusted-data envelope (`data: string[]`),
+  with `-- none` for an account with no alerts and `-- more` when AeroAPI has
+  another page. It names no `subject` — AeroAPI is one account's key with no
+  listable set of the person's subjects — and no `when`, as the alert list
+  takes no date range. Nothing here answers *what's new* or *what's due*.
+  Alerts need a Standard/Premium AeroAPI tier, so on a Personal key the group
+  reports this source's 401 rather than a list.
+- **Lookups and changes:** every flight, airport, operator, aircraft and
+  schedule read is a `lookup` hint, with the words people say (`flight
+  status`, `delayed`, `departures`, `airline`, `tail number`, …) as aliases;
+  the four alert writes are `change` hints and still ask before they write.
+- **A compound ask** looks like "what's on this week — any flights I'm
+  watching, and is anything due at school?" — the group calls
+  `fa_list_alerts` in `brief` beside the other members and merges the lines.
+- **Not browser-bridged:** every call is a direct AeroAPI request on your key,
+  so this source never answers "needs your browser open".
 
 ## Notes
 

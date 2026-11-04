@@ -9,6 +9,7 @@ import {
 import { viewArg, viewResponse } from '../view.js';
 import { client } from '../client.js';
 import { AirportCode, AlertId, FlightIdent, pageParams, qs } from './shared.js';
+import { ALERT_ALIASES, ALERT_LIST_VIEWS, briefAlertsResponse, travelMeta } from './hints.js';
 
 // The Alerts API requires a Standard/Premium AeroAPI tier; the free Personal
 // tier returns 401 for every /alerts endpoint. Surfaced in each tool's
@@ -108,15 +109,25 @@ export function registerAlertTools(server: McpServer): void {
   server.registerTool(
     'fa_list_alerts',
     {
-      description: 'List the flight alerts configured on your AeroAPI account.' + TIER,
+      description:
+        'List the flight alerts configured on your AeroAPI account — the flights you are watching.' + TIER,
       annotations: { readOnlyHint: true, openWorldHint: true },
+      _meta: travelMeta('whats-on', { canonical: true, aliases: ALERT_ALIASES }),
       inputSchema: z.object({
-        view: viewArg(),
+        view: z
+          .enum(ALERT_LIST_VIEWS)
+          .optional()
+          .describe(
+            'Response shape. "compact" (default) strips image/avatar URLs from the response; "full" returns FlightAware\'s payload untouched; ' +
+              '"brief" returns one line per alert, "ident route — <start date or no date> — <active|active until …|expired …|paused>", ' +
+              'inside the untrusted-data envelope, with "-- none" for no alerts and "-- more" when another page exists.',
+          ),
         ...pageParams,
       }),
     },
     async ({ max_pages, cursor, view }) => {
       const data = await client.get(`/alerts${qs({ max_pages, cursor })}`);
+      if (view === 'brief') return briefAlertsResponse(data);
       return viewResponse(view, data);
     },
   );
@@ -126,6 +137,7 @@ export function registerAlertTools(server: McpServer): void {
     {
       description: 'Get a single configured flight alert by its id.' + TIER,
       annotations: { readOnlyHint: true, openWorldHint: true },
+      _meta: travelMeta('lookup', { aliases: ['flight alert'] }),
       inputSchema: z.object({
         view: viewArg(),
         id: AlertId.describe('Alert id'),
@@ -148,6 +160,7 @@ export function registerAlertTools(server: McpServer): void {
         idempotentHint: false,
         openWorldHint: true,
       },
+      _meta: travelMeta('change', { aliases: ['watch a flight', 'track my flight', 'flight alert'] }),
       inputSchema: z.object({ ...alertConfigSchema, confirmToken: confirmTokenParam }),
     },
     async ({ confirmToken, ...args }, ctx) => {
@@ -183,6 +196,7 @@ export function registerAlertTools(server: McpServer): void {
         idempotentHint: true,
         openWorldHint: true,
       },
+      _meta: travelMeta('change', { aliases: ['flight alert'] }),
       inputSchema: z.object({
         id: AlertId.describe('Alert id to update'),
         ...alertConfigSchema,
@@ -223,6 +237,7 @@ export function registerAlertTools(server: McpServer): void {
         idempotentHint: true,
         openWorldHint: true,
       },
+      _meta: travelMeta('change', { aliases: ['stop watching a flight', 'flight alert'] }),
       inputSchema: z.object({
         id: AlertId.describe('Alert id to delete'),
         confirmToken: confirmTokenParam,
@@ -255,6 +270,7 @@ export function registerAlertTools(server: McpServer): void {
       description:
         'Get the current delivery (webhook) endpoint configured for your AeroAPI alerts.' + TIER,
       annotations: { readOnlyHint: true, openWorldHint: true },
+      _meta: travelMeta('lookup'),
       inputSchema: z.object({
         view: viewArg(),
       }),
@@ -276,6 +292,7 @@ export function registerAlertTools(server: McpServer): void {
         idempotentHint: true,
         openWorldHint: true,
       },
+      _meta: travelMeta('change'),
       inputSchema: z.object({
         // Every alert notification (flight/itinerary data) goes here, so only
         // an encrypted https: endpoint is accepted — not http: or other schemes.
