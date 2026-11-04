@@ -212,6 +212,11 @@ describe('fa_list_alerts view:"brief"', () => {
     expect(envelope.data).toEqual(['UAL1 — no date — active', '-- more']);
   });
 
+  it('escapes an alert whose description reads like a note, so "-- none" from FlightAware is still an item', async () => {
+    const { envelope } = await callBrief({ alerts: [{ id: 1, description: '-- none', enabled: true }], links: null });
+    expect(envelope.data).toEqual(['\\-- none — no date — active']);
+  });
+
   it('still answers compact by default (unchanged rung)', async () => {
     vi.spyOn(client, 'get').mockResolvedValue({ alerts: [{ id: 1, ident: 'UAL1' }] });
     const h = await harness();
@@ -229,6 +234,17 @@ describe('briefAlertLine', () => {
     );
     expect(briefAlertLine({ destination: 'KORD' }, Date.parse('2026-01-01'))).toBe('to KORD — no date — active');
     expect(briefAlertLine({}, Date.parse('2026-01-01'))).toBe('flight alert — no date — active');
+  });
+
+  it('escapes a title that starts with "-- " or "\\" with one leading backslash, so it never reads as a note', () => {
+    const now = Date.parse('2026-01-01');
+    expect(briefAlertLine({ description: '-- none' }, now)).toBe('\\-- none — no date — active');
+    expect(briefAlertLine({ description: '\\home trip' }, now)).toBe('\\\\home trip — no date — active');
+    expect(briefAlertLine({ description: '--no space' }, now)).toBe('--no space — no date — active');
+    const long = briefAlertLine({ description: `-- ${'x'.repeat(200)}` }, now);
+    expect(long.startsWith('\\-- x')).toBe(true);
+    expect(long.length).toBeLessThanOrEqual(120);
+    expect(long.endsWith('… — no date — active')).toBe(true);
   });
 
   it('reads a non-ISO start as no date rather than inventing one', () => {
