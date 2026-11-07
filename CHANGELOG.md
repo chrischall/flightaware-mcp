@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.4.1](https://github.com/chrischall/flightaware-mcp/compare/v1.4.0...v1.4.1) (2026-11-07)
+
+
+### Bug Fixes
+
+* **deps:** upgrade @chrischall/mcp-utils to 3.7.2 so uploads carry only the file's bytes ([#181](https://github.com/chrischall/flightaware-mcp/issues/181)) ([9f22fba](https://github.com/chrischall/flightaware-mcp/commit/9f22fba38df0e92c49736b5d8ff992d9913a5fe5))
+* **flights:** deliver flight maps as an image or link when hosted, and cap inline ([#178](https://github.com/chrischall/flightaware-mcp/issues/178)) ([62b8276](https://github.com/chrischall/flightaware-mcp/commit/62b827658d2b46168b35093ac178b301e68cbde9))
+
 ## [1.4.0](https://github.com/chrischall/flightaware-mcp/compare/v1.3.2...v1.4.0) (2026-11-04)
 
 
