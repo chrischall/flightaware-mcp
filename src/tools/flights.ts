@@ -3,6 +3,7 @@ import { join } from 'node:path';
 import { z } from 'zod';
 import type { McpServer, CallToolResult } from '@modelcontextprotocol/server';
 import { McpToolError, minifiedResult, readEnvVar, resolveOutputDir, writeBinaryOutput } from '@chrischall/mcp-utils';
+import { deliverFile, INLINE_DELIVERY_MAX_BYTES, isHostedEnv, type DeliveredFile } from '@chrischall/mcp-utils/export';
 import { viewArg, viewResponse } from '../view.js';
 import { client } from '../client.js';
 import {
@@ -12,6 +13,17 @@ import {
   qs,
 } from './shared.js';
 import { FLIGHT_ALIASES, travelMeta } from './hints.js';
+
+/**
+ * Shape a delivered flight map as a tool result. Inline: the image block (plus
+ * a note block when the route differs from the one asked for). Link: `{ via, url,
+ * expiresAt }` — a signed URL, so it is handed to the user, not fetched.
+ */
+function deliveredResult(d: DeliveredFile): CallToolResult {
+  const note = d.note ? { note: d.note } : {};
+  if (d.via === 'link') return minifiedResult({ via: 'link', url: d.url, expiresAt: d.expiresAt, ...note });
+  return { content: [...d.content, ...(d.note ? [{ type: 'text' as const, text: d.note }] : [])] };
+}
 
 export function registerFlightTools(server: McpServer): void {
   server.registerTool(
@@ -142,8 +154,8 @@ export function registerFlightTools(server: McpServer): void {
     'fa_get_flight_map',
     {
       description:
-        'Get a rendered map image (PNG) of a flight by fa_flight_id. Writes the PNG to disk (default: $AEROAPI_OUTPUT_DIR, else ~/Downloads/flightaware-mcp) and returns the path, or returns it inline as base64 when inline:true.',
-      // Not read-only: the default path creates directories and writes a PNG file.
+        'Get a rendered map image (PNG) of a flight by fa_flight_id. On a local install it writes the PNG to disk (default: $AEROAPI_OUTPUT_DIR, else ~/Downloads/flightaware-mcp) and returns the path, or returns the image inline when inline:true (up to 10 MiB; a bigger map is saved to disk, with a note). On a hosted server it returns the image inline when it fits, otherwise a signed, expiring download link (url, expiresAt) — never a path on the server\'s disk.',
+      // Not read-only: the local default creates directories and writes a PNG file.
       annotations: {
         readOnlyHint: false,
         destructiveHint: false,
@@ -162,11 +174,11 @@ export function registerFlightTools(server: McpServer): void {
         output_dir: z
           .string()
           .optional()
-          .describe('Directory to write the PNG to (default: $AEROAPI_OUTPUT_DIR, else ~/Downloads/flightaware-mcp). Must be inside that default directory.'),
+          .describe('Local install only: directory to write the PNG to (default: $AEROAPI_OUTPUT_DIR, else ~/Downloads/flightaware-mcp). Must be inside that default directory. On a hosted server a download link is returned instead.'),
         inline: z
           .boolean()
           .optional()
-          .describe('Return the PNG inline as base64 instead of writing to disk'),
+          .describe('Return the PNG inline as an image instead of writing to disk (capped at 10 MiB). Hosted: inline is already the default; inline:false returns a download link.'),
       }),
     },
     async ({ id, height, width, show_data_block, output_dir, inline }): Promise<CallToolResult> => {
@@ -179,11 +191,23 @@ export function registerFlightTools(server: McpServer): void {
           hint: 'The fa_flight_id may be invalid or have no positions yet.',
         });
       }
-      if (inline) {
-        return {
-          content: [{ type: 'image', data: base64, mimeType: 'image/png' }],
-        };
+      const bytes = Buffer.from(base64, 'base64');
+      const fileName = `flight-map-${id}.png`;
+      // Hosted (mcp-host): the caller shares no filesystem with this process,
+      // so a path on the runner's disk reaches nobody. The map comes back as
+      // an inline image when it fits the inline cap, otherwise as a signed,
+      // expiring link from the blob store; a hosted deployment with no store
+      // refuses an over-cap map (too_large) rather than writing it to disk.
+      // inline:false / output_dir there become a link (deliverFile notes why).
+      if (isHostedEnv()) {
+        const wantsSaved = inline === false || output_dir !== undefined;
+        const delivered = await deliverFile({
+          bytes, fileName, mimeType: 'image/png', keyPrefix: 'maps',
+          prefer: inline === true ? 'inline' : wantsSaved ? 'disk' : 'auto',
+        });
+        return deliveredResult(delivered);
       }
+      // Local install — default unchanged: write to disk and return the path.
       // arg → $AEROAPI_OUTPUT_DIR → ~/Downloads/flightaware-mcp; the write is an exclusive, no-follow
       // create under a sanitized, never-overwriting name (flight-map-X-2.png …).
       // output_dir is model-chosen, so a per-call directory must always stay
@@ -192,14 +216,24 @@ export function registerFlightTools(server: McpServer): void {
       // ~/Downloads/flightaware-mcp. The last-resort default is NOT cwd:
       // desktop hosts (Claude Desktop / .mcpb) spawn the server with cwd "/",
       // where the write fails (EROFS/EACCES) after the billed map query has
-      // already been paid.
+      // already been paid. inline:true returns the image, but only up to the
+      // inline cap — a bigger map is saved to disk instead, with a note.
       const outputRoot = readEnvVar('AEROAPI_OUTPUT_DIR') || join(homedir(), 'Downloads', 'flightaware-mcp');
       const dir = resolveOutputDir(output_dir, 'AEROAPI_OUTPUT_DIR', {
         name: 'flightaware-mcp',
         allowedRoots: [outputRoot],
       });
+      const tooBig = bytes.length > INLINE_DELIVERY_MAX_BYTES;
+      if (inline && !tooBig) {
+        return deliveredResult(await deliverFile({ bytes, fileName, mimeType: 'image/png', store: null, prefer: 'inline' }));
+      }
       const path = writeBinaryOutput({ dir, baseName: `flight-map-${id}`, base64, mimeType: 'image/png' });
-      return minifiedResult({ map: path });
+      return minifiedResult({
+        map: path,
+        ...(inline
+          ? { note: `${fileName} is ${bytes.length} bytes, too large to return inline (limit ${INLINE_DELIVERY_MAX_BYTES}). It was saved to disk instead.` }
+          : {}),
+      });
     },
   );
 

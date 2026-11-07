@@ -55,6 +55,13 @@ Every alert mutation asks for your confirmation before it touches your AeroAPI a
 | `AEROAPI_CACHE_TTL` | no | Seconds to cache identical **live-data** GET responses (default: 15; `0` disables). Cuts AeroAPI per-query billing. |
 | `AEROAPI_STATIC_CACHE_TTL` | no | Longer TTL for **reference data** — airport/operator info, routes, ownership, canonical lookups (default: 3600; `0` disables). |
 
+## Upgrading
+
+### next release
+
+- **`fa_get_flight_map` on a hosted server** (mcp-host, i.e. `MCP_DATA_DIR` or `MCP_BLOB_BASE_URL` set) no longer writes the PNG to the server's disk, where the caller could never open it. It returns the map as an inline image when it fits (10 MiB), otherwise a signed, expiring download link: `{ "via": "link", "url": "…", "expiresAt": "…", "note"?: "…" }` in place of `{ "map": "<path>" }`. `inline:false` or an `output_dir` there also yields a link (with a `note`). A hosted server with no blob store refuses an over-cap map with a `too_large` error.
+- **Local installs**: the default is unchanged (`{ "map": "<path>" }`). `inline:true` is now capped at 10 MiB; a bigger map is saved to disk and returned as `{ "map": "<path>", "note": "…" }` instead of an oversized inline image.
+
 ## Development
 
 ```bash
