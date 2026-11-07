@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, afterEach } from 'vitest';
+import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest';
 import { createTestHarness, parseToolResult } from '@chrischall/mcp-utils/test';
 import { registerFlightTools } from '../../src/tools/flights.js';
 import { client } from '../../src/client.js';
@@ -131,6 +131,147 @@ describe('fa_get_flight_map file output', () => {
       vi.unstubAllEnvs();
       rmSync(home, { recursive: true, force: true });
     }
+  });
+});
+
+describe('fa_get_flight_map delivery (hosted / caps)', () => {
+  const ID = 'UAL123-1700000000-airline-0123';
+  const CAP = 10 * 1024 * 1024;
+  const small = Buffer.from('fake-png').toString('base64');
+  const big = Buffer.alloc(CAP + 1, 7).toString('base64');
+  const BLOB_BASE = 'https://host.example/b/reg_0123456789abcdef01234567';
+  let root: string;
+
+  beforeEach(() => {
+    root = mkdtempSync(join(tmpdir(), 'fa-deliver-'));
+    vi.stubEnv('HOME', root);
+    vi.stubEnv('AEROAPI_OUTPUT_DIR', join(root, 'out'));
+  });
+  afterEach(() => {
+    vi.unstubAllEnvs();
+    vi.unstubAllGlobals();
+    rmSync(root, { recursive: true, force: true });
+  });
+
+  /** Hosted with a blob store: point it at a fake gateway and record the PUTs. */
+  function stubBlobStore(): { url: string; bytes: number; type: string }[] {
+    vi.stubEnv('MCP_BLOB_BASE_URL', BLOB_BASE);
+    vi.stubEnv('MCP_BLOB_SIGNING_KEY', 'k'.repeat(32));
+    const puts: { url: string; bytes: number; type: string }[] = [];
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (url: string | URL | Request, init?: RequestInit) => {
+        puts.push({
+          url: String(url),
+          bytes: (init?.body as Uint8Array).byteLength,
+          type: new Headers(init?.headers).get('content-type') ?? '',
+        });
+        return new Response(null, { status: 201 });
+      }),
+    );
+    return puts;
+  }
+
+  async function callMap(map: string, args: Record<string, unknown> = {}) {
+    vi.spyOn(client, 'get').mockResolvedValue({ map });
+    const h = await createTestHarness(registerFlightTools);
+    try {
+      return await h.callTool('fa_get_flight_map', { id: ID, ...args });
+    } finally {
+      await h.close();
+    }
+  }
+
+  type Block = { type: string; text?: string; data?: string; mimeType?: string };
+  const blocks = (res: { content: unknown }) => res.content as Block[];
+  const nothingOnDisk = () => expect(existsSync(join(root, 'out'))).toBe(false);
+  const noInlineOverCap = (res: { content: unknown }) => {
+    for (const b of blocks(res)) {
+      if (b.data !== undefined) expect(Buffer.from(b.data, 'base64').length).toBeLessThanOrEqual(CAP);
+    }
+  };
+
+  it('local: inline:true over the inline cap saves to disk instead, and says why', async () => {
+    const res = await callMap(big, { inline: true });
+    expect(res.isError).toBeFalsy();
+    noInlineOverCap(res);
+    const data = parseToolResult<{ map: string; note?: string }>(res);
+    expect(dirname(data.map)).toBe(join(root, 'out'));
+    expect(readFileSync(data.map).length).toBe(CAP + 1);
+    expect(data.note).toMatch(/too large to return inline/);
+  });
+
+  it('hosted: by default returns the map as an inline image and writes nothing to disk', async () => {
+    const puts = stubBlobStore();
+    const res = await callMap(small);
+    expect(res.isError).toBeFalsy();
+    expect(blocks(res)[0]).toMatchObject({ type: 'image', mimeType: 'image/png', data: small });
+    expect(puts).toEqual([]);
+    nothingOnDisk();
+  });
+
+  it('hosted: over the inline cap returns a signed download link, never a disk path', async () => {
+    const puts = stubBlobStore();
+    const res = await callMap(big);
+    expect(res.isError).toBeFalsy();
+    noInlineOverCap(res);
+    expect(puts).toHaveLength(1);
+    expect(puts[0]).toMatchObject({ bytes: CAP + 1, type: 'image/png' });
+    expect(puts[0].url).toContain(`/maps/`);
+    const data = parseToolResult<{ via: string; url: string; expiresAt: string; map?: string }>(res);
+    expect(data.via).toBe('link');
+    expect(data.url).toMatch(/^https:\/\/host\.example\//);
+    expect(Date.parse(data.expiresAt)).toBeGreaterThan(Date.now());
+    expect(data.map).toBeUndefined();
+    nothingOnDisk();
+  });
+
+  it('hosted: output_dir / inline:false still never write the runner disk — a link instead, with a note', async () => {
+    for (const args of [{ output_dir: join(root, 'out', 'maps') }, { inline: false }]) {
+      const puts = stubBlobStore();
+      const res = await callMap(small, args);
+      expect(res.isError).toBeFalsy();
+      expect(puts).toHaveLength(1);
+      const data = parseToolResult<{ via: string; url: string; note: string }>(res);
+      expect(data.via).toBe('link');
+      expect(data.note).toMatch(/hosted/);
+      nothingOnDisk();
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it('hosted with no blob store: a small map still comes back inline', async () => {
+    vi.stubEnv('MCP_DATA_DIR', join(root, 'data'));
+    const res = await callMap(small);
+    expect(blocks(res)[0]).toMatchObject({ type: 'image', data: small });
+    nothingOnDisk();
+  });
+
+  it('hosted: inline:true over the cap still gets a link rather than an oversized image', async () => {
+    const puts = stubBlobStore();
+    const res = await callMap(big, { inline: true });
+    noInlineOverCap(res);
+    expect(puts).toHaveLength(1);
+    expect(parseToolResult<{ via: string }>(res).via).toBe('link');
+    nothingOnDisk();
+  });
+
+  it('hosted with no blob store: inline:false returns the image inline with a note, not a disk path', async () => {
+    vi.stubEnv('MCP_DATA_DIR', join(root, 'data'));
+    const res = await callMap(small, { inline: false });
+    expect(blocks(res)[0]).toMatchObject({ type: 'image', data: small });
+    expect(blocks(res)[1]).toMatchObject({ type: 'text' });
+    expect(blocks(res)[1].text).toMatch(/inline instead/);
+    nothingOnDisk();
+  });
+
+  it('hosted with no blob store: an over-cap map is refused as too large, not written to disk', async () => {
+    vi.stubEnv('MCP_DATA_DIR', join(root, 'data'));
+    const res = await callMap(big, { output_dir: join(root, 'out') });
+    expect(res.isError).toBe(true);
+    noInlineOverCap(res);
+    expect(blocks(res).map((b) => b.text ?? '').join('\n')).toMatch(/inline limit/);
+    nothingOnDisk();
   });
 });
 
