@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.2](https://github.com/chrischall/flightaware-mcp/compare/v1.4.1...v1.4.2) (2026-11-24)
+
+
+### Bug Fixes
+
+* **deps:** Bump the production-dependencies group with 2 updates ([#183](https://github.com/chrischall/flightaware-mcp/issues/183)) ([42b5029](https://github.com/chrischall/flightaware-mcp/commit/42b5029800ae4b6473493847f0721c180f447cc7))
+
 ## [1.4.1](https://github.com/chrischall/flightaware-mcp/compare/v1.4.0...v1.4.1) (2026-11-07)
 
 
